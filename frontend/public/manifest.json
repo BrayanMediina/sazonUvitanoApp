@@ -1,0 +1,23 @@
+{
+  "name": "El Sazón Uvitano",
+  "short_name": "Sazón Uvitano",
+  "description": "PWA operativa para restaurante con pedidos, caja, domicilios y seguimiento GPS.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#5F290F",
+  "background_color": "#FEFEFE",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+import express from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import morgan from 'morgan'
+import rateLimit from 'express-rate-limit'
+import { authRoutes } from './routes/auth.js'
+import { orderRoutes } from './routes/orders.js'
+import { paymentRoutes } from './routes/payments.js'
+import { deliveryRoutes } from './routes/deliveries.js'
+import { reportRoutes } from './routes/reports.js'
+import { adminRoutes } from './routes/admin.js'
+import { errorHandler } from './middlewares/error.js'
+
+export const app = express()
+
+app.use(helmet())
+app.use(cors({ origin: true }))
+app.use(express.json())
+app.use(morgan('combined'))
+app.use(rateLimit({ windowMs: 60_000, max: 300 }))
+
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', service: 'sazon-uvitano-backend' })
+})
+
+app.use('/api/auth', authRoutes)
+app.use('/api', orderRoutes)
+app.use('/api', paymentRoutes)
+app.use('/api', deliveryRoutes)
+app.use('/api', reportRoutes)
+app.use('/api', adminRoutes)
+
+app.use(errorHandler)

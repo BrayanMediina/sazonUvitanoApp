@@ -1,0 +1,20 @@
+{
+  "name": "sazonuvitanoapp",
+  "version": "1.0.0",
+  "description": "PWA de gestión operativa para El Sazón Uvitano",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "npm --prefix frontend run build && npm --prefix server run build",
+    "test": "npm run build",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:backend": "npm --prefix server run dev",
+    "docker:up": "docker compose up --build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
