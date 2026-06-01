@@ -9,7 +9,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(16),
   JWT_EXPIRES_IN:     z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
-  CORS_ORIGIN:        z.string().default('http://localhost:5173,http://localhost:8080'),
+  CORS_ORIGIN:        z.string().default('http://localhost:5173,http://localhost:8080,*.vercel.app'),
   RATE_LIMIT_WINDOW_MS:     z.coerce.number().default(900_000),
   RATE_LIMIT_MAX_REQUESTS:  z.coerce.number().default(100),
 })
