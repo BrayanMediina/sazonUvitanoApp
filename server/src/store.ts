@@ -9,7 +9,7 @@ export interface UserRecord {
   id: string
   name: string
   document: string
-  email: string
+  email?: string
   phone?: string
   role: Role
   passwordHash: string
@@ -128,7 +128,7 @@ export async function authenticateUserByDocument(document: string, password: str
 export async function createUser(data: {
   name: string
   document: string
-  email: string
+  email?: string
   phone?: string
   password: string
   role: Role
@@ -136,8 +136,10 @@ export async function createUser(data: {
   const existingDoc = getUserByDocument(data.document)
   if (existingDoc) throw new Error('Documento ya registrado')
 
-  const existingEmail = getUserByEmail(data.email)
-  if (existingEmail) throw new Error('Email ya registrado')
+  if (data.email) {
+    const existingEmail = getUserByEmail(data.email)
+    if (existingEmail) throw new Error('Email ya registrado')
+  }
 
   const user: UserRecord = {
     id: randomUUID(),

@@ -14,11 +14,20 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
   name: z.string().min(3),
-  document: z.string().min(5).unique('Documento ya registrado'),
+  document: z.string().min(5),
   email: z.string().email().optional(),
   phone: z.string().optional(),
   password: z.string().min(6),
   role: z.enum(['mesero', 'cajero', 'domiciliario', 'administrador']).default('mesero')
+}).superRefine(async (data, ctx) => {
+  const existing = getUserByDocument(data.document)
+  if (existing) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['document'],
+      message: 'Documento ya registrado'
+    })
+  }
 })
 
 const faceIdSchema = z.object({
@@ -59,13 +68,14 @@ router.post('/register', async (req, res) => {
   }
 
   try {
+    const { name, document, email, phone, password, role } = parsed.data
     const user = await createUser({
-      name: parsed.data.name,
-      document: parsed.data.document,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      password: parsed.data.password,
-      role: parsed.data.role
+      name,
+      document,
+      email,
+      phone,
+      password,
+      role
     })
 
     const tokens = createTokens(user)

@@ -1,102 +1,258 @@
-import { appConfig, type Role } from '../config'
-import { enqueueOfflineItem } from './offline'
+// ============================================================
+// SERVICIOS API — El Sazón Uvitano PWA
+// src/services/api.ts
+// ============================================================
+import type {
+  AuthResponse, User, Table, Order, OrderItem,
+  Product, Payment, Delivery, DailySummary,
+  ApiResponse, PaginatedResponse, PaymentMethod,
+  DeliveryAddress, Role
+} from '../types'
 
-interface LoginRequest {
-  email: string
-  password: string
-}
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
-interface AuthResponse {
-  accessToken: string
-  refreshToken: string
-  user: {
-    id: string
-    name: string
-    email: string
-    role: Role
-  }
-}
-
-const defaultHeaders = () => ({
-  'Content-Type': 'application/json'
-})
-
-async function jsonRequest<T>(path: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${appConfig.apiUrl}${path}`, {
+// ─── CLIENTE HTTP BASE ────────────────────────────────────────
+async function http<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const token = localStorage.getItem('sazon-access')
+  const res = await fetch(`${BASE_URL}${path}`, {
     ...options,
     headers: {
-      ...defaultHeaders(),
-      ...options?.headers
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  })
+
+  if (res.status === 401) {
+    // Intentar refresh automático
+    const refreshed = await refreshToken()
+    if (!refreshed) {
+      localStorage.removeItem('sazon-access')
+      localStorage.removeItem('sazon-refresh')
+      window.location.href = '/login'
+      throw new Error('Sesión expirada')
     }
-  })
-
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(errorText || `Error al consumir ${path}`)
+    return http<T>(path, options)
   }
 
-  return (await response.json()) as T
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: 'Error desconocido' }))
+    throw new Error(err.message ?? 'Error en la solicitud')
+  }
+
+  return res.json()
 }
 
-export async function login(payload: LoginRequest): Promise<AuthResponse> {
-  return jsonRequest<AuthResponse>('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  })
+// ─── AUTH ─────────────────────────────────────────────────────
+export const authService = {
+  login: (body: { document: string; password: string }) =>
+    http<AuthResponse>('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  register: (body: {
+    name: string; document: string; email?: string;
+    phone?: string; password: string; role: Role
+  }) =>
+    http<AuthResponse>('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    }),
+
+  logout: () =>
+    http<void>('/api/auth/logout', { method: 'POST' }),
+
+  me: () =>
+    http<User>('/api/auth/me'),
 }
 
-export async function refreshToken(refreshToken: string): Promise<AuthResponse> {
-  return jsonRequest<AuthResponse>('/auth/refresh', {
-    method: 'POST',
-    body: JSON.stringify({ refreshToken })
-  })
-}
-
-export async function logout() {
-  return jsonRequest<{ ok: true }>('/auth/logout', {
-    method: 'POST'
-  })
-}
-
-export async function fetchDashboardSummary() {
-  return jsonRequest('/reports/summary')
-}
-
-export async function fetchTables() {
-  return jsonRequest('/tables')
-}
-
-export async function createOrder(payload: unknown) {
-  if (!navigator.onLine) {
-    await enqueueOfflineItem({
-      id: crypto.randomUUID(),
-      type: 'order',
-      payload,
-      createdAt: new Date().toISOString()
+async function refreshToken(): Promise<boolean> {
+  try {
+    const refresh = localStorage.getItem('sazon-refresh')
+    if (!refresh) return false
+    const res = await fetch(`${BASE_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken: refresh }),
     })
-    return { queued: true }
+    if (!res.ok) return false
+    const data = await res.json()
+    localStorage.setItem('sazon-access', data.accessToken)
+    localStorage.setItem('sazon-refresh', data.refreshToken)
+    return true
+  } catch {
+    return false
   }
-
-  return jsonRequest('/orders', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  })
 }
 
-export async function createPayment(payload: unknown) {
-  return jsonRequest('/payments', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  })
+// ─── USUARIOS (Admin) ─────────────────────────────────────────
+export const usersService = {
+  getAll: (params?: { role?: Role; page?: number; limit?: number }) =>
+    http<PaginatedResponse<User>>(`/api/users?${new URLSearchParams(params as any)}`),
+
+  getById: (id: string) =>
+    http<User>(`/api/users/${id}`),
+
+  create: (body: Partial<User> & { password: string }) =>
+    http<User>('/api/users', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: string, body: Partial<User>) =>
+    http<User>(`/api/users/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  toggleActive: (id: string) =>
+    http<User>(`/api/users/${id}/toggle-active`, { method: 'PATCH' }),
+
+  resetPassword: (id: string, newPassword: string) =>
+    http<void>(`/api/users/${id}/reset-password`, {
+      method: 'PATCH',
+      body: JSON.stringify({ newPassword }),
+    }),
 }
 
-export async function createDelivery(payload: unknown) {
-  return jsonRequest('/deliveries', {
-    method: 'POST',
-    body: JSON.stringify(payload)
-  })
+// ─── MESAS ────────────────────────────────────────────────────
+export const tablesService = {
+  getAll: () =>
+    http<Table[]>('/api/tables'),
+
+  getById: (id: string) =>
+    http<Table>(`/api/tables/${id}`),
+
+  create: (body: { number: number; capacity?: number; zone?: string }) =>
+    http<Table>('/api/tables', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: string, body: Partial<Table>) =>
+    http<Table>(`/api/tables/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  updateStatus: (id: string, status: Table['status']) =>
+    http<Table>(`/api/tables/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  delete: (id: string) =>
+    http<void>(`/api/tables/${id}`, { method: 'DELETE' }),
 }
 
-export async function getDailyReport() {
-  return jsonRequest('/payments/report/daily')
+// ─── PRODUCTOS ────────────────────────────────────────────────
+export const productsService = {
+  getAll: (params?: { category?: string; isAvailable?: boolean }) =>
+    http<Product[]>(`/api/products?${new URLSearchParams(params as any)}`),
+
+  getById: (id: string) =>
+    http<Product>(`/api/products/${id}`),
+
+  create: (body: Omit<Product, 'id'>) =>
+    http<Product>('/api/products', { method: 'POST', body: JSON.stringify(body) }),
+
+  update: (id: string, body: Partial<Product>) =>
+    http<Product>(`/api/products/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
+
+  toggleAvailability: (id: string) =>
+    http<Product>(`/api/products/${id}/toggle-availability`, { method: 'PATCH' }),
+
+  delete: (id: string) =>
+    http<void>(`/api/products/${id}`, { method: 'DELETE' }),
+}
+
+// ─── PEDIDOS ──────────────────────────────────────────────────
+export const ordersService = {
+  getAll: (params?: { status?: string; tableId?: string; type?: string }) =>
+    http<Order[]>(`/api/orders?${new URLSearchParams(params as any)}`),
+
+  getById: (id: string) =>
+    http<Order>(`/api/orders/${id}`),
+
+  create: (body: {
+    type: 'mesa' | 'domicilio'
+    tableId?: string
+    items: { productId: string; quantity: number; notes?: string }[]
+    notes?: string
+  }) =>
+    http<Order>('/api/orders', { method: 'POST', body: JSON.stringify(body) }),
+
+  updateStatus: (id: string, status: Order['status']) =>
+    http<Order>(`/api/orders/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  addItem: (orderId: string, item: { productId: string; quantity: number; notes?: string }) =>
+    http<Order>(`/api/orders/${orderId}/items`, {
+      method: 'POST',
+      body: JSON.stringify(item),
+    }),
+
+  removeItem: (orderId: string, itemId: string) =>
+    http<Order>(`/api/orders/${orderId}/items/${itemId}`, { method: 'DELETE' }),
+
+  cancel: (id: string) =>
+    http<Order>(`/api/orders/${id}/cancel`, { method: 'PATCH' }),
+}
+
+// ─── PAGOS ────────────────────────────────────────────────────
+export const paymentsService = {
+  processPayment: (body: {
+    orderId: string
+    method: PaymentMethod
+    receivedAmount?: number
+  }) =>
+    http<Payment>('/api/payments', { method: 'POST', body: JSON.stringify(body) }),
+
+  getDailyReport: (date?: string) =>
+    http<DailySummary>(`/api/payments/report/daily${date ? `?date=${date}` : ''}`),
+
+  getHistory: (params?: { from?: string; to?: string; page?: number }) =>
+    http<PaginatedResponse<Payment>>(`/api/payments?${new URLSearchParams(params as any)}`),
+}
+
+// ─── DOMICILIOS ───────────────────────────────────────────────
+export const deliveriesService = {
+  getAll: (params?: { status?: string }) =>
+    http<Delivery[]>(`/api/deliveries?${new URLSearchParams(params as any)}`),
+
+  getById: (id: string) =>
+    http<Delivery>(`/api/deliveries/${id}`),
+
+  getMyDeliveries: () =>
+    http<Delivery[]>('/api/deliveries/my'),
+
+  create: (body: {
+    orderId?: string
+    customerName: string
+    customerPhone: string
+    address: DeliveryAddress
+    items?: { productId: string; quantity: number; notes?: string }[]
+  }) =>
+    http<Delivery>('/api/deliveries', { method: 'POST', body: JSON.stringify(body) }),
+
+  assign: (id: string, driverId: string) =>
+    http<Delivery>(`/api/deliveries/${id}/assign`, {
+      method: 'PATCH',
+      body: JSON.stringify({ driverId }),
+    }),
+
+  updateStatus: (id: string, status: Delivery['status']) =>
+    http<Delivery>(`/api/deliveries/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    }),
+
+  updateLocation: (lat: number, lng: number) =>
+    http<void>('/api/deliveries/location', {
+      method: 'PATCH',
+      body: JSON.stringify({ lat, lng }),
+    }),
+}
+
+// ─── REPORTES ─────────────────────────────────────────────────
+export const reportsService = {
+  getDaily: (date?: string) =>
+    http<DailySummary>(`/api/reports/daily${date ? `?date=${date}` : ''}`),
+
+  getRange: (from: string, to: string) =>
+    http<DailySummary[]>(`/api/reports/range?from=${from}&to=${to}`),
 }
