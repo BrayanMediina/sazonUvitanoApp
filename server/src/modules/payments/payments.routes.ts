@@ -22,7 +22,7 @@ router.post('/', requireAuth, requireRole('administrador','cajero'), validate(z.
 })
 
 router.get('/', requireAuth, requireRole('administrador'), async (req, res, next) => {
-  try { res.json({ success: true, ...(await svc.getHistory(req.query as any)) }) } catch (e) { next(e) }
+  try { res.json({ success: true, data: await svc.getHistory(req.query as any) }) } catch (e) { next(e) }
 })
 
 router.get('/report/daily', requireAuth, requireRole('administrador','cajero'), async (req, res, next) => {

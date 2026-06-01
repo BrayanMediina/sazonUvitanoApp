@@ -28,7 +28,7 @@ const updateSchema = z.object({
 router.get('/', ...admin, async (req, res, next) => {
   try {
     const data = await svc.getAll(req.query as any)
-    res.json({ success: true, ...data })
+    res.json({ success: true, data })
   } catch (e) { next(e) }
 })
 

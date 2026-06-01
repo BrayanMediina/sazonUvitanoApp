@@ -43,7 +43,10 @@ async function http<T>(
     throw new Error(err.message ?? 'Error en la solicitud')
   }
 
-  return res.json()
+  const json = await res.json()
+  // El backend envuelve respuestas en { success, data }.
+  // Si existe .data, lo extraemos; si no (ej. logout), devolvemos el objeto completo.
+  return (json && typeof json === 'object' && 'data' in json ? json.data : json) as T
 }
 
 // ─── AUTH ─────────────────────────────────────────────────────
