@@ -1,28 +1,102 @@
-import { useAppStore } from '../../store'
-import Layout from '../../components/Layout'
-import Card from '../../components/Card'
+import { useState } from 'react'
+import Layout from '../../components/layout/Layout'
+import PageHeader from '../../components/layout/PageHeader'
+import EmptyState from '../../components/ui/EmptyState'
+import Spinner from '../../components/ui/Spinner'
+import MesaCard from './components/MesaCard'
+import { useTables } from '../../hooks/useTables'
+import { useAppStore, type AppStore } from '../../store'
+import { TABLE_STATUS_CONFIG } from '../../constants/orderStatus'
+import type { TableStatus } from '../../types'
+
+const FILTERS: { label: string; value: TableStatus | 'all' }[] = [
+  { label: 'Todas',        value: 'all' },
+  { label: 'Disponibles',  value: 'disponible' },
+  { label: 'Ocupadas',     value: 'ocupada' },
+  { label: 'Por cobrar',   value: 'pendiente_pago' },
+]
 
 export default function MesasPage() {
-  const user = useAppStore((state) => state.user)
+  const [filter, setFilter] = useState<TableStatus | 'all'>('all')
+  const { isLoading, isError, refetch } = useTables()
+  const rawTables = useAppStore((s) => (s as AppStore).tables)
+  const tables = rawTables as import('../../types').Table[]
+
+  const disponibles    = tables.filter((t) => t.status === 'disponible').length
+  const ocupadas       = tables.filter((t) => t.status === 'ocupada').length
+  const porCobrar      = tables.filter((t) => t.status === 'pendiente_pago').length
+
+  const filtered = filter === 'all' ? tables : tables.filter((t) => t.status === filter)
 
   return (
-    <Layout userName={user?.name} userRole={user?.role}>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-950">Gestión de Mesas</h2>
-          <p className="text-brand-600">Controla el estado y ocupación de cada mesa</p>
-        </div>
+    <Layout title="Mesas">
+      <PageHeader
+        title="Mesas"
+        subtitle={`${tables.length} mesas configuradas`}
+      />
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((table) => (
-            <Card key={table} className="cursor-pointer hover:shadow-lg transition-shadow">
-              <div className="text-center">
-                <p className="text-4xl font-bold text-brand-950">Mesa {table}</p>
-                <p className="text-sm text-brand-600 mt-2">Disponible</p>
-              </div>
-            </Card>
+      {/* Stats rápidos */}
+      <div className="px-5 grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: 'Disponibles', count: disponibles, color: 'bg-green-50 text-green-700' },
+          { label: 'Ocupadas',    count: ocupadas,    color: 'bg-orange-50 text-orange-700' },
+          { label: 'Por cobrar',  count: porCobrar,   color: 'bg-amber-50 text-amber-700' },
+        ].map((s) => (
+          <div key={s.label} className={`${s.color} rounded-2xl p-3 text-center`}>
+            <p className="text-xl font-bold font-heading">{s.count}</p>
+            <p className="text-[10px] font-medium">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtros horizontales */}
+      <div className="px-5 mb-4">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-all active:scale-95 ${
+                filter === f.value
+                  ? 'bg-brand-900 text-white'
+                  : 'bg-stone-100 text-stone-600'
+              }`}
+            >
+              {f.label}
+            </button>
           ))}
         </div>
+      </div>
+
+      {/* Grid de mesas */}
+      <div className="px-5">
+        {isLoading && (
+          <div className="flex justify-center py-12">
+            <Spinner />
+          </div>
+        )}
+        {isError && (
+          <EmptyState
+            icon="⚠️"
+            title="Error al cargar mesas"
+            description="No se pudo conectar con el servidor"
+            action={<button onClick={() => refetch()} className="text-sm text-brand-700 font-medium">Reintentar</button>}
+          />
+        )}
+        {!isLoading && !isError && filtered.length === 0 && (
+          <EmptyState
+            icon="🪑"
+            title="Sin mesas"
+            description={filter === 'all' ? 'No hay mesas configuradas' : `No hay mesas ${TABLE_STATUS_CONFIG[filter as TableStatus]?.label.toLowerCase()}`}
+          />
+        )}
+        {!isLoading && !isError && filtered.length > 0 && (
+          <div className="grid grid-cols-3 gap-3">
+            {filtered.map((mesa) => (
+              <MesaCard key={mesa.id} mesa={mesa} />
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   )

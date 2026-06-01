@@ -1,16 +1,11 @@
-import React from 'react';
-
-interface OfflineBannerProps {
-  isOnline: boolean;
+export default function OfflineBanner({ isOnline }: { isOnline: boolean }) {
+  if (isOnline) return null
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-amber-500 text-white px-4 py-2 text-center text-xs font-semibold flex items-center justify-center gap-2">
+      <span>📡</span>
+      Sin conexión — Modo offline activo
+    </div>
+  )
 }
 
-export const OfflineBanner: React.FC<OfflineBannerProps> = ({ isOnline }) => {
-  if (isOnline) return null;
-
-  return (
-    <div className="bg-yellow-500 text-white px-4 py-2 text-center">
-      <p className="text-sm font-semibold">📡 Sin conexión a internet</p>
-      <p className="text-xs">Los cambios se sincronizarán cuando recuperes la conexión</p>
-    </div>
-  );
-};
+export { OfflineBanner }

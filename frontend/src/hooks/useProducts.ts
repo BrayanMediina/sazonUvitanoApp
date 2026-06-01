@@ -1,24 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query'
+import { productsService } from '../services/api'
+import type { ProductCategory } from '../types'
 
-export const useProducts = () => {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Fetch products from API
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        // Implement fetch logic
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
-
-  return { products, loading };
-};
+export function useProducts(category?: ProductCategory, onlyAvailable = false) {
+  return useQuery({
+    queryKey: ['products', category, onlyAvailable],
+    queryFn: () => productsService.getAll({ category, isAvailable: onlyAvailable || undefined }),
+    staleTime: 60_000,
+  })
+}

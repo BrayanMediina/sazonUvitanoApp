@@ -3,9 +3,9 @@
 // src/services/api.ts
 // ============================================================
 import type {
-  AuthResponse, User, Table, Order, OrderItem,
+  AuthResponse, User, Table, Order,
   Product, Payment, Delivery, DailySummary,
-  ApiResponse, PaginatedResponse, PaymentMethod,
+  PaginatedResponse, PaymentMethod,
   DeliveryAddress, Role
 } from '../types'
 

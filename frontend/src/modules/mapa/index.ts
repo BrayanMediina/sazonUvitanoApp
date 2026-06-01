@@ -1,1 +1,1 @@
-export { MapaPage } from './MapaPage';
+export { default as MapaPage } from './MapaPage'

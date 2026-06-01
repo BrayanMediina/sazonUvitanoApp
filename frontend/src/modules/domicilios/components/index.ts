@@ -1,3 +1,3 @@
-export { DomicilioCard } from './DomicilioCard';
-export { AsignarDomiciliarioModal } from './AsignarDomiciliarioModal';
-export { DomicilioStatusBadge } from './DomicilioStatusBadge';
+export { default as DomicilioCard } from './DomicilioCard'
+export { default as AsignarDomiciliarioModal } from './AsignarDomiciliarioModal'
+export { default as DomicilioStatusBadge } from './DomicilioStatusBadge'

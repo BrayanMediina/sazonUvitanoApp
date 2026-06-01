@@ -1,3 +1,3 @@
-export { CobroModal } from './CobroModal';
-export { PedidoCobroCard } from './PedidoCobroCard';
-export { CierreCajaModal } from './CierreCajaModal';
+export { default as CobroModal } from './CobroModal'
+export { default as PedidoCobroCard } from './PedidoCobroCard'
+export { default as CierreCajaModal } from './CierreCajaModal'

@@ -1,33 +1,29 @@
-import React from 'react';
+import { useNavigate } from 'react-router-dom'
+import { TABLE_STATUS_CONFIG } from '../../../constants/orderStatus'
+import type { Table } from '../../../types'
 
-interface MesaCardProps {
-  mesaId: number;
-  number: number;
-  status: 'available' | 'occupied' | 'reserved';
-  capacity: number;
-  onClick?: () => void;
-}
+interface MesaCardProps { mesa: Table }
 
-export const MesaCard: React.FC<MesaCardProps> = ({
-  number,
-  status,
-  capacity,
-  onClick,
-}) => {
-  const statusColors = {
-    available: 'bg-green-100 border-green-500',
-    occupied: 'bg-red-100 border-red-500',
-    reserved: 'bg-yellow-100 border-yellow-500',
-  };
+export default function MesaCard({ mesa }: MesaCardProps) {
+  const navigate = useNavigate()
+  const cfg = TABLE_STATUS_CONFIG[mesa.status]
 
   return (
-    <div
-      onClick={onClick}
-      className={`border-2 rounded-lg p-4 cursor-pointer transition-transform hover:scale-105 ${statusColors[status]}`}
+    <button
+      onClick={() => navigate(`/mesas/${mesa.id}`)}
+      className={`w-full text-left p-4 rounded-2xl border-2 transition-all active:scale-95 ${cfg.color} border-transparent hover:border-current`}
     >
-      <h3 className="text-2xl font-bold">Mesa {number}</h3>
-      <p className="text-sm">Capacidad: {capacity}</p>
-      <p className="text-xs mt-2 capitalize">{status}</p>
-    </div>
-  );
-};
+      <div className="flex items-start justify-between mb-2">
+        <span className={`text-lg font-bold font-heading ${cfg.textColor}`}>Mesa {mesa.number}</span>
+        <span className={`h-2.5 w-2.5 rounded-full mt-1 ${cfg.dotColor}`} />
+      </div>
+      {mesa.zone && <p className="text-xs text-stone-500 mb-1">{mesa.zone}</p>}
+      {mesa.capacity && (
+        <p className={`text-xs font-medium ${cfg.textColor} opacity-70`}>
+          {mesa.capacity} personas
+        </p>
+      )}
+      <p className={`text-xs font-semibold mt-2 ${cfg.textColor}`}>{cfg.label}</p>
+    </button>
+  )
+}

@@ -1,3 +1,3 @@
-export { UsuariosPage } from './UsuariosPage';
-export { UsuarioFormModal } from './UsuarioFormModal';
-export { UsuarioRow } from './UsuarioRow';
+export { default as UsuariosPage } from '../UsuariosPage'
+export { default as UsuarioFormModal } from '../UsuarioFormModal'
+export { default as UsuarioRow } from '../UsuarioRow'

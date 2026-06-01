@@ -1,16 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react'
+import { useAppStore, type AppStore } from '../store'
+import { initSocket, disconnectSocket } from '../sockets/socketService'
 
-export const useSocket = () => {
-  const [connected, setConnected] = useState(false);
+export function useSocket() {
+  const user  = useAppStore((s) => (s as AppStore).user)
+  const token = useAppStore((s) => (s as AppStore).accessToken)
 
   useEffect(() => {
-    // Initialize socket connection
-    // Implement socket initialization
-    
+    if (!user || !token) return
+    const socket = initSocket(token)
     return () => {
-      // Cleanup socket connection
-    };
-  }, []);
+      socket.off()
+    }
+  }, [user, token])
+}
 
-  return { connected };
-};
+export function useSocketInit() {
+  const token = useAppStore((s) => (s as AppStore).accessToken)
+  const user  = useAppStore((s) => (s as AppStore).user)
+
+  useEffect(() => {
+    if (!token || !user) return
+    initSocket(token)
+    return () => { disconnectSocket() }
+  }, [token, user])
+}

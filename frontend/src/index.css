@@ -1,9 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap');
 @import 'leaflet/dist/leaflet.css';
 @import 'tailwindcss';
 
-:root {
-  font-family: Inter, system-ui, sans-serif;
-  color: #5f290f;
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Poppins', system-ui, sans-serif;
+
+  --color-brand-50:  #fdf8f5;
+  --color-brand-100: #faeee4;
+  --color-brand-200: #f3d4bb;
+  --color-brand-300: #e8b48a;
+  --color-brand-400: #d98c55;
+  --color-brand-500: #c45e21;
+  --color-brand-600: #a34d1a;
+  --color-brand-700: #8f5b2a;
+  --color-brand-800: #7a4422;
+  --color-brand-900: #5f290f;
+  --color-brand-950: #3d1808;
+
+  --shadow-soft: 0 12px 32px rgba(95, 41, 15, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1c1917;
   background: #fefefe;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -11,28 +35,37 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at top, rgba(232, 194, 124, 0.35), transparent 30%),
-    #fefefe;
+  min-height: 100dvh;
+  background: #fefefe;
+  overscroll-behavior: none;
 }
 
 #root {
-  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+h1, h2, h3, h4 {
+  font-family: 'Poppins', system-ui, sans-serif;
 }
 
 .leaflet-container {
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   min-height: 350px;
+  z-index: 1;
 }
 
 ::selection {
-  background: rgba(196, 94, 33, 0.25);
+  background: rgba(196, 94, 33, 0.2);
+}
+
+/* Scroll suave sin scrollbar visible en chrome */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

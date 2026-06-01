@@ -1,29 +1,28 @@
-import React from 'react';
+import { cn } from '../../utils/classNames'
+import type { ReactNode } from 'react'
 
 interface BadgeProps {
-  variant?: 'success' | 'warning' | 'error' | 'info' | 'default';
-  children: React.ReactNode;
-  className?: string;
+  color?: string
+  textColor?: string
+  children: ReactNode
+  className?: string
+  dot?: boolean
 }
 
-export const Badge: React.FC<BadgeProps> = ({
-  variant = 'default',
-  children,
-  className,
-}) => {
-  const variantClasses = {
-    success: 'bg-green-100 text-green-800',
-    warning: 'bg-yellow-100 text-yellow-800',
-    error: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800',
-    default: 'bg-gray-100 text-gray-800',
-  };
-
+export default function Badge({ color, textColor, children, className, dot }: BadgeProps) {
   return (
     <span
-      className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${variantClasses[variant]} ${className || ''}`}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-full',
+        color ?? 'bg-stone-100',
+        textColor ?? 'text-stone-700',
+        className,
+      )}
     >
+      {dot && <span className={cn('h-1.5 w-1.5 rounded-full', textColor?.replace('text-', 'bg-') ?? 'bg-stone-500')} />}
       {children}
     </span>
-  );
-};
+  )
+}
+
+export { Badge }

@@ -1,24 +1,26 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query'
+import { useAppStore } from '../store'
+import { deliveriesService } from '../services/api'
+import type { DeliveryStatus } from '../types'
 
-export const useOrders = () => {
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+export function useDeliveries(status?: DeliveryStatus) {
+  const setDeliveries = useAppStore((s) => s.setDeliveries)
 
-  useEffect(() => {
-    // Fetch orders from API
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        // Implement fetch logic
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        setLoading(false);
-      }
-    };
+  return useQuery({
+    queryKey: ['deliveries', status],
+    queryFn: async () => {
+      const data = await deliveriesService.getAll(status ? { status } : undefined)
+      setDeliveries(data)
+      return data
+    },
+    refetchInterval: 20_000,
+  })
+}
 
-    fetchOrders();
-  }, []);
-
-  return { orders, loading };
-};
+export function useMyDeliveries() {
+  return useQuery({
+    queryKey: ['deliveries', 'my'],
+    queryFn: () => deliveriesService.getMyDeliveries(),
+    refetchInterval: 15_000,
+  })
+}

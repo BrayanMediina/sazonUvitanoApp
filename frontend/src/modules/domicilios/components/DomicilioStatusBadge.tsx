@@ -1,16 +1,11 @@
-import React from 'react';
+import { DELIVERY_STATUS_CONFIG } from '../../../constants/orderStatus'
+import type { DeliveryStatus } from '../../../types'
 
-export const DomicilioStatusBadge: React.FC<{ status: string }> = ({ status }) => {
-  const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    assigned: 'bg-blue-100 text-blue-800',
-    in_delivery: 'bg-purple-100 text-purple-800',
-    delivered: 'bg-green-100 text-green-800',
-  };
-
+export default function DomicilioStatusBadge({ status }: { status: DeliveryStatus }) {
+  const cfg = DELIVERY_STATUS_CONFIG[status]
   return (
-    <span className={`text-xs px-2 py-1 rounded-full ${statusColors[status as keyof typeof statusColors]}`}>
-      {status}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.color} ${cfg.textColor}`}>
+      {cfg.icon} {cfg.label}
     </span>
-  );
-};
+  )
+}

@@ -1,31 +1,36 @@
-import React from 'react';
+import { ORDER_STATUS_CONFIG } from '../../../constants/orderStatus'
+import type { OrderStatus } from '../../../types'
 
-export const OrderStatusStepper: React.FC<{ status: string }> = ({ status }) => {
-  const steps = ['pending', 'preparing', 'ready', 'delivered'];
-  const currentStep = steps.indexOf(status);
+const FLOW: OrderStatus[] = ['tomado', 'en_preparacion', 'listo', 'entregado', 'pagado', 'finalizado']
+
+export default function OrderStatusStepper({ status }: { status: OrderStatus }) {
+  const currentIdx = FLOW.indexOf(status)
+  if (status === 'cancelado') return (
+    <div className="flex items-center gap-2 bg-red-50 rounded-xl p-3">
+      <span className="text-red-500">❌</span>
+      <span className="text-sm font-semibold text-red-700">Pedido cancelado</span>
+    </div>
+  )
 
   return (
-    <div className="flex justify-between items-center mb-4">
-      {steps.map((step, index) => (
-        <div key={step} className="flex items-center flex-1">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
-              index <= currentStep
-                ? 'bg-orange-600 text-white'
-                : 'bg-gray-200 text-gray-600'
-            }`}
-          >
-            {index + 1}
+    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
+      {FLOW.map((step, idx) => {
+        const cfg    = ORDER_STATUS_CONFIG[step]
+        const active = idx <= currentIdx
+        return (
+          <div key={step} className="flex items-center shrink-0">
+            <div className={`flex flex-col items-center gap-1 ${active ? 'opacity-100' : 'opacity-30'}`}>
+              <div className={`h-2 w-2 rounded-full ${active ? 'bg-brand-900' : 'bg-stone-300'}`} />
+              <span className={`text-[9px] font-medium ${active ? 'text-brand-900' : 'text-stone-400'} whitespace-nowrap`}>
+                {cfg.label}
+              </span>
+            </div>
+            {idx < FLOW.length - 1 && (
+              <div className={`w-5 h-px mb-3 mx-0.5 ${idx < currentIdx ? 'bg-brand-900' : 'bg-stone-200'}`} />
+            )}
           </div>
-          {index < steps.length - 1 && (
-            <div
-              className={`flex-1 h-1 mx-2 ${
-                index < currentStep ? 'bg-orange-600' : 'bg-gray-200'
-              }`}
-            />
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
-  );
-};
+  )
+}

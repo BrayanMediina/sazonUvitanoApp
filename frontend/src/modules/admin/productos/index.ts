@@ -1,1 +1,1 @@
-export { ProductosPage } from './ProductosPage';
+export { default as ProductosPage } from './ProductosPage'

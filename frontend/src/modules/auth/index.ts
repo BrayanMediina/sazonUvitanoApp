@@ -1,3 +1,3 @@
-export { LoginPage } from './LoginPage';
-export { LoginForm } from './LoginForm';
-export { RegisterForm } from './RegisterForm';
+export { default as LoginPage } from './LoginPage'
+export { default as LoginForm } from './LoginForm'
+export { default as RegisterForm } from './RegisterForm'

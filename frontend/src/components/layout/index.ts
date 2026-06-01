@@ -1,4 +1,4 @@
-export { Layout } from './Layout';
-export { TopBar } from './TopBar';
-export { BottomNav } from './BottomNav';
-export { PageHeader } from './PageHeader';
+export { default as Layout } from './Layout'
+export { default as TopBar } from './TopBar'
+export { default as BottomNav } from './BottomNav'
+export { default as PageHeader } from './PageHeader'

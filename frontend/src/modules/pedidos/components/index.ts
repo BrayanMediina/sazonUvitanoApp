@@ -1,5 +1,5 @@
-export { ProductCard } from './ProductCard';
-export { MenuCatalog } from './MenuCatalog';
-export { OrderCart } from './OrderCart';
-export { OrderItemRow } from './OrderItemRow';
-export { OrderStatusStepper } from './OrderStatusStepper';
+export { default as ProductCard } from './ProductCard'
+export { default as MenuCatalog } from './MenuCatalog'
+export { default as OrderCart } from './OrderCart'
+export { default as OrderItemRow } from './OrderItemRow'
+export { default as OrderStatusStepper } from './OrderStatusStepper'

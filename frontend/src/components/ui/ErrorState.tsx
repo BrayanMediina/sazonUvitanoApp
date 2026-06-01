@@ -1,27 +1,26 @@
-import React from 'react';
-import { Button } from './Button';
+import Button from './Button'
 
 interface ErrorStateProps {
-  title?: string;
-  message?: string;
-  onRetry?: () => void;
+  title?: string
+  message?: string
+  onRetry?: () => void
 }
 
-export const ErrorState: React.FC<ErrorStateProps> = ({
+export default function ErrorState({
   title = 'Algo salió mal',
   message = 'Intenta nuevamente',
   onRetry,
-}) => {
+}: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4">
-      <div className="text-5xl mb-4">❌</div>
-      <h3 className="text-lg font-semibold text-gray-800 mb-2">{title}</h3>
-      <p className="text-gray-600 text-center mb-4 max-w-sm">{message}</p>
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div className="text-5xl mb-4">⚠️</div>
+      <h3 className="text-base font-semibold text-stone-800 mb-1">{title}</h3>
+      <p className="text-sm text-stone-400 mb-5 max-w-xs">{message}</p>
       {onRetry && (
-        <Button onClick={onRetry} variant="primary">
-          Reintentar
-        </Button>
+        <Button onClick={onRetry} size="sm">Reintentar</Button>
       )}
     </div>
-  );
-};
+  )
+}
+
+export { ErrorState }

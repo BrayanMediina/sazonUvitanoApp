@@ -1,24 +1,78 @@
+import { useEffect, useRef } from 'react'
+import Layout from '../../components/layout/Layout'
+import MessageBubble from './components/MessageBubble'
+import ChatInput from './components/ChatInput'
 import { useAppStore } from '../../store'
-import Layout from '../../components/Layout'
-import Card from '../../components/Card'
+import { emitChatMessage } from '../../sockets/socketService'
+import { formatDate } from '../../utils/formatDate'
 
 export default function ChatPage() {
-  const user = useAppStore((state) => state.user)
+  const user     = useAppStore((s) => s.user)
+  const messages = useAppStore((s) => s.messages)
+  const markAllRead = useAppStore((s) => s.markAllRead)
+  const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    markAllRead()
+  }, [markAllRead])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = (content: string) => {
+    emitChatMessage(content)
+  }
+
+  // Agrupar mensajes por fecha
+  const grouped: { date: string; msgs: typeof messages }[] = []
+  let lastDate = ''
+  for (const msg of messages) {
+    const d = formatDate(msg.timestamp)
+    if (d !== lastDate) {
+      grouped.push({ date: d, msgs: [] })
+      lastDate = d
+    }
+    grouped[grouped.length - 1].msgs.push(msg)
+  }
 
   return (
-    <Layout userName={user?.name} userRole={user?.role}>
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-950">Chat</h2>
-          <p className="text-brand-600">Comunicación con el equipo en tiempo real</p>
-        </div>
+    <div className="flex flex-col h-dvh">
+      <Layout title="Chat">
+        <div className="flex-1 overflow-y-auto px-4 pt-4 pb-4">
+          {messages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <p className="text-3xl mb-3">💬</p>
+              <p className="text-sm font-medium text-stone-600">Chat del equipo</p>
+              <p className="text-xs text-stone-400 mt-1">Los mensajes aparecerán aquí</p>
+            </div>
+          )}
 
-        <Card title="Conversaciones">
-          <div className="text-center py-8 text-brand-600">
-            <p>No hay conversaciones activas</p>
-          </div>
-        </Card>
+          {grouped.map(({ date, msgs }) => (
+            <div key={date}>
+              <div className="flex items-center gap-2 my-4">
+                <div className="flex-1 h-px bg-stone-100" />
+                <span className="text-[10px] text-stone-400 font-medium px-2">{date}</span>
+                <div className="flex-1 h-px bg-stone-100" />
+              </div>
+              {msgs.map((msg) => (
+                <MessageBubble
+                  key={msg.id}
+                  message={msg}
+                  isOwn={msg.senderId === user?.id}
+                />
+              ))}
+            </div>
+          ))}
+
+          <div ref={bottomRef} />
+        </div>
+      </Layout>
+
+      {/* Input fijo al fondo, encima del BottomNav */}
+      <div className="fixed bottom-16 left-0 right-0 z-30">
+        <ChatInput onSend={handleSend} />
       </div>
-    </Layout>
+    </div>
   )
 }

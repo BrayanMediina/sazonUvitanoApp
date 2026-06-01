@@ -1,25 +1,29 @@
-import React from 'react';
-import { TopBar } from './TopBar';
-import { BottomNav } from './BottomNav';
+import type { ReactNode } from 'react'
+import TopBar from './TopBar'
+import BottomNav from './BottomNav'
+import OfflineBanner from '../ui/OfflineBanner'
+import { useAppStore } from '../../store'
 
 interface LayoutProps {
-  children: React.ReactNode;
-  topBar?: React.ReactNode;
-  bottomNav?: React.ReactNode;
+  children: ReactNode
+  title?: string
+  showBack?: boolean
+  topBarRight?: ReactNode
 }
 
-export const Layout: React.FC<LayoutProps> = ({
-  children,
-  topBar,
-  bottomNav,
-}) => {
+export default function Layout({ children, title, showBack, topBarRight }: LayoutProps) {
+  const isOnline = useAppStore((s) => s.isOnline)
+
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {topBar}
-      <main className="flex-1 overflow-y-auto pb-20">
+    <div className="flex flex-col min-h-dvh bg-stone-50">
+      <OfflineBanner isOnline={isOnline} />
+      <TopBar title={title} showBack={showBack} right={topBarRight} />
+      <main className="flex-1 overflow-y-auto pt-15 pb-20">
         {children}
       </main>
-      {bottomNav}
+      <BottomNav />
     </div>
-  );
-};
+  )
+}
+
+export { Layout }

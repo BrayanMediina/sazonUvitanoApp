@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\pkax0\\.claude\\projects\\c--Users-pkax0-Documents-ELECTIVA-3-ProyectoFinalPWA-sazonUvitanoApp\\memory"
+    ]
+  }
+}

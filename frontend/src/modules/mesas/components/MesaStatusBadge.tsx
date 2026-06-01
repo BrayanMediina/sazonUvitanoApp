@@ -1,22 +1,12 @@
-import React from 'react';
-import { Badge } from '../../../components/ui';
+import { TABLE_STATUS_CONFIG } from '../../../constants/orderStatus'
+import type { TableStatus } from '../../../types'
 
-interface MesaStatusBadgeProps {
-  status: 'available' | 'occupied' | 'reserved';
+export default function MesaStatusBadge({ status }: { status: TableStatus }) {
+  const cfg = TABLE_STATUS_CONFIG[status]
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${cfg.color} ${cfg.textColor}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${cfg.dotColor}`} />
+      {cfg.label}
+    </span>
+  )
 }
-
-export const MesaStatusBadge: React.FC<MesaStatusBadgeProps> = ({ status }) => {
-  const variants = {
-    available: 'success',
-    occupied: 'error',
-    reserved: 'warning',
-  };
-
-  const labels = {
-    available: 'Disponible',
-    occupied: 'Ocupada',
-    reserved: 'Reservada',
-  };
-
-  return <Badge variant={variants[status] as any}>{labels[status]}</Badge>;
-};

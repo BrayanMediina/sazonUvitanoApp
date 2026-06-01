@@ -1,37 +1,26 @@
-// IndexedDB Database Configuration
-// Using Dexie for IndexedDB management
+import Dexie, { type Table } from 'dexie'
+import type { Product, ChatMessage } from '../types'
 
-import Dexie, { Table } from 'dexie';
-
-export interface Order {
-  id?: string;
-  tableId: number;
-  items: any[];
-  status: string;
-  total: number;
-  createdAt: Date;
+interface OfflineOrder {
+  id?: string
+  data: Record<string, unknown>
+  createdAt: number
+  synced: boolean
 }
 
-export interface Delivery {
-  id?: string;
-  orderId: string;
-  driverId: string;
-  address: string;
-  status: string;
-  createdAt: Date;
-}
-
-export class AppDB extends Dexie {
-  orders!: Table<Order>;
-  deliveries!: Table<Delivery>;
+class SazonDatabase extends Dexie {
+  products!: Table<Product>
+  offlineOrders!: Table<OfflineOrder>
+  messages!: Table<ChatMessage>
 
   constructor() {
-    super('sazonUvitanoDB');
+    super('sazon-db')
     this.version(1).stores({
-      orders: '++id, tableId, status',
-      deliveries: '++id, orderId, driverId, status',
-    });
+      products:      'id, category, isAvailable',
+      offlineOrders: '++id, synced, createdAt',
+      messages:      'id, timestamp',
+    })
   }
 }
 
-export const db = new AppDB();
+export const db = new SazonDatabase()

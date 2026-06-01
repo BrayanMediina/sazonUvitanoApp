@@ -3,7 +3,7 @@
 // src/sockets/socketService.ts  (Socket.IO client)
 // ============================================================
 import { io, Socket } from 'socket.io-client'
-import { useAppStore } from '../store'
+import { useAppStore, type AppStore } from '../store'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000'
 
@@ -47,7 +47,7 @@ export function initSocket(token: string): Socket {
     reconnectionDelay: 2000,
   })
 
-  const store = useAppStore.getState()
+  const store = useAppStore.getState() as AppStore
 
   socket.on(SOCKET_EVENTS.ORDER_CREATED, (order) => {
     store.setOrders([order, ...store.orders])

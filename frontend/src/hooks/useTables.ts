@@ -1,25 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query'
+import { useAppStore } from '../store'
+import { tablesService } from '../services/api'
 
-export const useTables = () => {
-  const [tables, setTables] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+export function useTables() {
+  const setTables = useAppStore((s) => s.setTables)
 
-  useEffect(() => {
-    // Fetch tables from API
-    const fetchTables = async () => {
-      try {
-        setLoading(true);
-        // Implement fetch logic
-        setLoading(false);
-      } catch (err) {
-        setError(err as any);
-        setLoading(false);
-      }
-    };
-
-    fetchTables();
-  }, []);
-
-  return { tables, loading, error };
-};
+  return useQuery({
+    queryKey: ['tables'],
+    queryFn: async () => {
+      const data = await tablesService.getAll()
+      setTables(data)
+      return data
+    },
+    refetchInterval: 30_000,
+  })
+}

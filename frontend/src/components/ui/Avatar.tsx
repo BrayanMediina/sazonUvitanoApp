@@ -1,33 +1,24 @@
-import React from 'react';
+import { cn } from '../../utils/classNames'
 
 interface AvatarProps {
-  src?: string;
-  alt?: string;
-  initials?: string;
-  size?: 'sm' | 'md' | 'lg';
+  name?: string
+  src?: string
+  size?: 'sm' | 'md' | 'lg'
+  className?: string
 }
 
-export const Avatar: React.FC<AvatarProps> = ({
-  src,
-  alt = 'Avatar',
-  initials,
-  size = 'md',
-}) => {
-  const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-10 h-10 text-sm',
-    lg: 'w-12 h-12 text-base',
-  };
+export default function Avatar({ name, src, size = 'md', className }: AvatarProps) {
+  const sizes = { sm: 'h-8 w-8 text-xs', md: 'h-10 w-10 text-sm', lg: 'h-12 w-12 text-base' }
+  const initial = name?.charAt(0).toUpperCase() ?? '?'
 
   return (
-    <div
-      className={`${sizeClasses[size]} rounded-full bg-blue-500 text-white flex items-center justify-center font-bold overflow-hidden`}
-    >
-      {src ? (
-        <img src={src} alt={alt} className="w-full h-full object-cover" />
-      ) : (
-        initials
-      )}
+    <div className={cn('rounded-full bg-brand-100 text-brand-900 font-bold flex items-center justify-center overflow-hidden', sizes[size], className)}>
+      {src
+        ? <img src={src} alt={name ?? 'Avatar'} className="h-full w-full object-cover" />
+        : initial
+      }
     </div>
-  );
-};
+  )
+}
+
+export { Avatar }

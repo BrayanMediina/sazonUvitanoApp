@@ -1,1 +1,1 @@
-export { MesasAdminPage } from './MesasAdminPage';
+export { default as MesasAdminPage } from './MesasAdminPage'

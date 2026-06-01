@@ -1,51 +1,21 @@
-import React from 'react';
+import type { ReactNode } from 'react'
 
 interface PageHeaderProps {
-  title: string;
-  subtitle?: string;
-  backButton?: boolean;
-  onBack?: () => void;
-  actions?: React.ReactNode;
+  title: string
+  subtitle?: string
+  actions?: ReactNode
 }
 
-export const PageHeader: React.FC<PageHeaderProps> = ({
-  title,
-  subtitle,
-  backButton = false,
-  onBack,
-  actions,
-}) => {
+export default function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-4">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
-          {backButton && (
-            <button
-              onClick={onBack}
-              className="p-2 hover:bg-orange-400 rounded-lg transition-colors"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-          )}
-          <div>
-            <h1 className="text-2xl font-bold">{title}</h1>
-            {subtitle && <p className="text-orange-100 text-sm">{subtitle}</p>}
-          </div>
-        </div>
-        {actions && <div>{actions}</div>}
+    <div className="px-5 pt-5 pb-4 flex items-start justify-between gap-3">
+      <div>
+        <h1 className="text-xl font-bold text-stone-900 font-heading">{title}</h1>
+        {subtitle && <p className="text-sm text-stone-400 mt-0.5">{subtitle}</p>}
       </div>
+      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
     </div>
-  );
-};
+  )
+}
+
+export { PageHeader }

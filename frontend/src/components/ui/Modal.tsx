@@ -1,39 +1,65 @@
-import React from 'react';
+import { useEffect, type ReactNode } from 'react'
+import { cn } from '../../utils/classNames'
 
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
-  actions?: React.ReactNode;
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+  children: ReactNode
+  footer?: ReactNode
+  size?: 'sm' | 'md' | 'lg'
 }
 
-export const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  actions,
-}) => {
-  if (!isOpen) return null;
+export default function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
+  useEffect(() => {
+    if (!isOpen) return
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handle)
+    return () => document.removeEventListener('keydown', handle)
+  }, [isOpen, onClose])
+
+  if (!isOpen) return null
+
+  const maxW = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg' }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
+        className={cn(
+          'relative w-full bg-white rounded-2xl shadow-soft overflow-hidden',
+          maxW[size],
+        )}
+      >
         {title && (
-          <div className="border-b px-6 py-4">
-            <h2 className="text-lg font-bold">{title}</h2>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+            <h2 className="text-base font-bold text-stone-900 font-heading">{title}</h2>
+            <button
+              onClick={onClose}
+              className="min-w-10 min-h-10 flex items-center justify-center rounded-xl text-stone-400 hover:text-stone-600 active:bg-stone-100"
+              aria-label="Cerrar"
+            >
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         )}
-        <div className="px-6 py-4">
-          {children}
-        </div>
-        {actions && (
-          <div className="border-t px-6 py-4 flex justify-end gap-2">
-            {actions}
+        <div className="px-5 py-4">{children}</div>
+        {footer && (
+          <div className="px-5 py-4 border-t border-stone-100 flex gap-2 justify-end">
+            {footer}
           </div>
         )}
       </div>
     </div>
-  );
-};
+  )
+}
+
+export { Modal }

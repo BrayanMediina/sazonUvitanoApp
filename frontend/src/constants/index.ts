@@ -1,20 +1,3 @@
-// Payment methods configuration
-
-export const paymentMethods = {
-  cash: {
-    label: 'Efectivo',
-    icon: '💵',
-  },
-  card: {
-    label: 'Tarjeta',
-    icon: '💳',
-  },
-  transfer: {
-    label: 'Transferencia',
-    icon: '📱',
-  },
-  qr: {
-    label: 'Código QR',
-    icon: '📲',
-  },
-};
+export * from './orderStatus'
+export * from './paymentMethods'
+export * from './roles'

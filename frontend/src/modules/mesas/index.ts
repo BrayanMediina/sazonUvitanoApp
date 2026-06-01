@@ -1,2 +1,2 @@
-export { MesasPage } from './MesasPage';
-export { MesaDetallePage } from './MesaDetallePage';
+export { default as MesasPage } from './MesasPage'
+export { default as MesaDetallePage } from './MesaDetallePage'

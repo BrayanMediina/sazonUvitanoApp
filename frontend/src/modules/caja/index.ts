@@ -1,1 +1,1 @@
-export { CajaPage } from './CajaPage';
+export { default as CajaPage } from './CajaPage'

@@ -1,2 +1,2 @@
-export { MesasAdminPage } from './MesasAdminPage';
-export { MesaFormModal } from './MesaFormModal';
+export { default as MesasAdminPage } from '../MesasAdminPage'
+export { default as MesaFormModal } from '../MesaFormModal'

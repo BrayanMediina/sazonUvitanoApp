@@ -1,29 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react'
+import { useAppStore } from '../store'
+import { emitLocation } from '../sockets/socketService'
+import { deliveriesService } from '../services/api'
 
-export const useGPS = () => {
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function useGPS() {
+  const user = useAppStore((s) => s.user)
 
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation no soportada');
-      return;
-    }
+    if (user?.role !== 'domiciliario') return
+    if (!navigator.geolocation) return
 
     const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
+      (pos) => {
+        emitLocation(pos.coords.latitude, pos.coords.longitude)
+        deliveriesService.updateLocation(pos.coords.latitude, pos.coords.longitude).catch(() => {})
       },
-      (err) => {
-        setError(err.message);
-      }
-    );
+      (err) => console.error('GPS error:', err),
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 5_000 },
+    )
 
-    return () => navigator.geolocation.clearWatch(watchId);
-  }, []);
-
-  return { location, error };
-};
+    return () => navigator.geolocation.clearWatch(watchId)
+  }, [user?.role])
+}

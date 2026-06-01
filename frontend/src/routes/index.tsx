@@ -1,17 +1,11 @@
-// ============================================================
-// RUTAS Y GUARDS — El Sazón Uvitano PWA
-// src/routes/index.tsx
-// ============================================================
 import { lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { useAppStore } from '../store'
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
+import { useAppStore, type AppStore } from '../store'
 import type { Role } from '../types'
 import PageLoader from '../components/ui/PageLoader'
 
 // ─── LAZY IMPORTS (code splitting) ───────────────────────────
 const LoginPage          = lazy(() => import('../modules/auth/LoginPage'))
-
-// Compartidas
 const DashboardPage      = lazy(() => import('../modules/dashboard/DashboardPage'))
 const ChatPage           = lazy(() => import('../modules/chat/ChatPage'))
 const NotFoundPage       = lazy(() => import('../pages/NotFoundPage'))
@@ -40,16 +34,9 @@ const ReportesPage       = lazy(() => import('../modules/reportes/ReportesPage')
 
 // ─── PERMISOS POR ROL ─────────────────────────────────────────
 export const ROLE_ROUTES: Record<Role, string[]> = {
-  mesero: [
-    '/dashboard', '/mesas', '/mesas/:id', '/pedidos/nuevo', '/pedidos/:id', '/chat',
-  ],
-  cajero: [
-    '/dashboard', '/mesas', '/mesas/:id', '/caja', '/domicilios',
-    '/domicilios/nuevo', '/mapa', '/chat',
-  ],
-  domiciliario: [
-    '/dashboard', '/mis-entregas', '/mapa', '/chat',
-  ],
+  mesero: ['/dashboard', '/mesas', '/mesas/:id', '/pedidos/nuevo', '/pedidos/:id', '/chat'],
+  cajero: ['/dashboard', '/mesas', '/mesas/:id', '/caja', '/domicilios', '/domicilios/nuevo', '/mapa', '/chat'],
+  domiciliario: ['/dashboard', '/mis-entregas', '/mapa', '/chat'],
   administrador: [
     '/dashboard', '/mesas', '/mesas/:id', '/pedidos/nuevo', '/pedidos/:id',
     '/caja', '/domicilios', '/domicilios/nuevo', '/mapa', '/chat',
@@ -58,29 +45,23 @@ export const ROLE_ROUTES: Record<Role, string[]> = {
 }
 
 // ─── GUARD: requiere auth ─────────────────────────────────────
-function RequireAuth({ children }: { children: React.ReactNode }) {
-  const user = useAppStore((s) => s.user)
-  const token = useAppStore((s) => s.accessToken)
+function RequireAuth() {
+  const user  = useAppStore((s) => (s as AppStore).user)
+  const token = useAppStore((s) => (s as AppStore).accessToken)
   if (!user || !token) return <Navigate to="/login" replace />
-  return <>{children}</>
+  return <Outlet />
 }
 
 // ─── GUARD: requiere rol ──────────────────────────────────────
-function RequireRole({
-  children,
-  roles,
-}: {
-  children: React.ReactNode
-  roles: Role[]
-}) {
-  const user = useAppStore((s) => s.user)
+function RequireRole({ roles }: { roles: Role[] }) {
+  const user = useAppStore((s) => (s as AppStore).user)
   if (!user || !roles.includes(user.role)) return <Navigate to="/dashboard" replace />
-  return <>{children}</>
+  return <Outlet />
 }
 
-// ─── REDIRECT INICIAL POR ROL ────────────────────────────────
+// ─── REDIRECT INICIAL ────────────────────────────────────────
 function RoleRedirect() {
-  const user = useAppStore((s) => s.user)
+  const user = useAppStore((s) => (s as AppStore).user)
   if (!user) return <Navigate to="/login" replace />
   return <Navigate to="/dashboard" replace />
 }
@@ -96,93 +77,48 @@ export default function AppRouter() {
           <Route path="/" element={<RoleRedirect />} />
 
           {/* Protegidas */}
-          <Route element={<RequireAuth><Outlet /></RequireAuth>}>
-
+          <Route element={<RequireAuth />}>
             {/* Todos los roles */}
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/chat" element={
-              <RequireRole roles={['administrador','cajero','domiciliario','mesero']}>
-                <ChatPage />
-              </RequireRole>
-            } />
+            <Route element={<RequireRole roles={['administrador','cajero','domiciliario','mesero']} />}>
+              <Route path="/chat" element={<ChatPage />} />
+            </Route>
 
             {/* Mesero + Cajero + Admin */}
-            <Route path="/mesas" element={
-              <RequireRole roles={['administrador','cajero','mesero']}>
-                <MesasPage />
-              </RequireRole>
-            } />
-            <Route path="/mesas/:id" element={
-              <RequireRole roles={['administrador','cajero','mesero']}>
-                <MesaDetallePage />
-              </RequireRole>
-            } />
-            <Route path="/pedidos/nuevo" element={
-              <RequireRole roles={['administrador','mesero']}>
-                <PedidoNuevoPage />
-              </RequireRole>
-            } />
-            <Route path="/pedidos/:id" element={
-              <RequireRole roles={['administrador','cajero','mesero']}>
-                <PedidoDetallePage />
-              </RequireRole>
-            } />
+            <Route element={<RequireRole roles={['administrador','cajero','mesero']} />}>
+              <Route path="/mesas" element={<MesasPage />} />
+              <Route path="/mesas/:id" element={<MesaDetallePage />} />
+            </Route>
+            <Route element={<RequireRole roles={['administrador','cajero','mesero']} />}>
+              <Route path="/pedidos/:id" element={<PedidoDetallePage />} />
+            </Route>
+            <Route element={<RequireRole roles={['administrador','mesero']} />}>
+              <Route path="/pedidos/nuevo" element={<PedidoNuevoPage />} />
+            </Route>
 
             {/* Cajero + Admin */}
-            <Route path="/caja" element={
-              <RequireRole roles={['administrador','cajero']}>
-                <CajaPage />
-              </RequireRole>
-            } />
-            <Route path="/domicilios" element={
-              <RequireRole roles={['administrador','cajero']}>
-                <DomiciliosPage />
-              </RequireRole>
-            } />
-            <Route path="/domicilios/nuevo" element={
-              <RequireRole roles={['administrador','cajero']}>
-                <DomicilioNuevoPage />
-              </RequireRole>
-            } />
-            <Route path="/mapa" element={
-              <RequireRole roles={['administrador','cajero','domiciliario']}>
-                <MapaPage />
-              </RequireRole>
-            } />
+            <Route element={<RequireRole roles={['administrador','cajero']} />}>
+              <Route path="/caja" element={<CajaPage />} />
+              <Route path="/domicilios" element={<DomiciliosPage />} />
+              <Route path="/domicilios/nuevo" element={<DomicilioNuevoPage />} />
+            </Route>
+            <Route element={<RequireRole roles={['administrador','cajero','domiciliario']} />}>
+              <Route path="/mapa" element={<MapaPage />} />
+            </Route>
 
             {/* Domiciliario */}
-            <Route path="/mis-entregas" element={
-              <RequireRole roles={['domiciliario']}>
-                <MisEntregasPage />
-              </RequireRole>
-            } />
+            <Route element={<RequireRole roles={['domiciliario']} />}>
+              <Route path="/mis-entregas" element={<MisEntregasPage />} />
+            </Route>
 
             {/* Admin only */}
-            <Route path="/reportes" element={
-              <RequireRole roles={['administrador']}>
-                <ReportesPage />
-              </RequireRole>
-            } />
-            <Route path="/admin" element={
-              <RequireRole roles={['administrador']}>
-                <AdminPage />
-              </RequireRole>
-            } />
-            <Route path="/admin/usuarios" element={
-              <RequireRole roles={['administrador']}>
-                <AdminUsuariosPage />
-              </RequireRole>
-            } />
-            <Route path="/admin/productos" element={
-              <RequireRole roles={['administrador']}>
-                <AdminProductosPage />
-              </RequireRole>
-            } />
-            <Route path="/admin/mesas" element={
-              <RequireRole roles={['administrador']}>
-                <AdminMesasPage />
-              </RequireRole>
-            } />
+            <Route element={<RequireRole roles={['administrador']} />}>
+              <Route path="/reportes" element={<ReportesPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />
+              <Route path="/admin/productos" element={<AdminProductosPage />} />
+              <Route path="/admin/mesas" element={<AdminMesasPage />} />
+            </Route>
           </Route>
 
           {/* 404 */}
@@ -194,34 +130,30 @@ export default function AppRouter() {
 }
 
 // ─── HELPER: navItems por rol para el BottomNav ───────────────
-export const NAV_ITEMS_BY_ROLE: Record<Role, {
-  path: string
-  label: string
-  icon: string
-}[]> = {
+export const NAV_ITEMS_BY_ROLE: Record<Role, { path: string; label: string; icon: string }[]> = {
   mesero: [
-    { path: '/dashboard', label: 'Inicio',   icon: 'home' },
-    { path: '/mesas',     label: 'Mesas',    icon: 'grid' },
-    { path: '/chat',      label: 'Chat',     icon: 'chat' },
+    { path: '/dashboard', label: 'Inicio',  icon: 'home' },
+    { path: '/mesas',     label: 'Mesas',   icon: 'grid' },
+    { path: '/chat',      label: 'Chat',    icon: 'chat' },
   ],
   cajero: [
-    { path: '/dashboard',  label: 'Inicio',      icon: 'home' },
-    { path: '/mesas',      label: 'Mesas',       icon: 'grid' },
-    { path: '/caja',       label: 'Caja',        icon: 'cash' },
-    { path: '/domicilios', label: 'Domicilios',  icon: 'truck' },
-    { path: '/chat',       label: 'Chat',        icon: 'chat' },
+    { path: '/dashboard',  label: 'Inicio',     icon: 'home' },
+    { path: '/mesas',      label: 'Mesas',      icon: 'grid' },
+    { path: '/caja',       label: 'Caja',       icon: 'cash' },
+    { path: '/domicilios', label: 'Domicilios', icon: 'truck' },
+    { path: '/chat',       label: 'Chat',       icon: 'chat' },
   ],
   domiciliario: [
-    { path: '/dashboard',    label: 'Inicio',    icon: 'home' },
-    { path: '/mis-entregas', label: 'Entregas',  icon: 'package' },
-    { path: '/mapa',         label: 'Mapa',      icon: 'map' },
-    { path: '/chat',         label: 'Chat',      icon: 'chat' },
+    { path: '/dashboard',    label: 'Inicio',   icon: 'home' },
+    { path: '/mis-entregas', label: 'Entregas', icon: 'package' },
+    { path: '/mapa',         label: 'Mapa',     icon: 'map' },
+    { path: '/chat',         label: 'Chat',     icon: 'chat' },
   ],
   administrador: [
-    { path: '/dashboard', label: 'Inicio',    icon: 'home' },
-    { path: '/mesas',     label: 'Mesas',     icon: 'grid' },
-    { path: '/caja',      label: 'Caja',      icon: 'cash' },
-    { path: '/reportes',  label: 'Reportes',  icon: 'chart' },
-    { path: '/admin',     label: 'Admin',     icon: 'settings' },
+    { path: '/dashboard', label: 'Inicio',   icon: 'home' },
+    { path: '/mesas',     label: 'Mesas',    icon: 'grid' },
+    { path: '/caja',      label: 'Caja',     icon: 'cash' },
+    { path: '/reportes',  label: 'Reportes', icon: 'chart' },
+    { path: '/admin',     label: 'Admin',    icon: 'settings' },
   ],
 }

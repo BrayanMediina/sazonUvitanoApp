@@ -4,19 +4,56 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
   base: '/',
-  assetsInclude: ['**/*.png', '**/*.svg', '**/*.jpg', '**/*.jpeg'],
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: false,
-      includeAssets: ['favicon.svg', 'icons/icon-192.svg', 'icons/icon-512.svg'],
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,jpeg,webp,woff2}']
+      includeAssets: ['favicon.svg', 'icons/icon-192.png', 'icons/icon-512.png'],
+      manifest: {
+        name: 'El Sazón Uvitano',
+        short_name: 'Sazón',
+        description: 'Sistema de gestión operativa para restaurante',
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        orientation: 'portrait',
+        theme_color: '#5F290F',
+        background_color: '#FEFEFE',
+        lang: 'es-CO',
+        icons: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
       },
-      devOptions: {
-        enabled: false
-      }
-    })
-  ]
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: '/index.html',
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/products/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-products',
+              expiration: { maxAgeSeconds: 3600 },
+            },
+          },
+          {
+            urlPattern: /\/api\/orders/,
+            handler: 'NetworkFirst',
+            options: { cacheName: 'api-orders' },
+          },
+          {
+            urlPattern: /\.tile\.openstreetmap\.org/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'map-tiles',
+              expiration: { maxEntries: 200, maxAgeSeconds: 86400 },
+            },
+          },
+        ],
+      },
+      devOptions: { enabled: false },
+    }),
+  ],
 })

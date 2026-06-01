@@ -1,26 +1,18 @@
-import React from 'react';
-import { Input } from '../ui/Input';
+import Input from '../ui/Input'
+import type { InputHTMLAttributes } from 'react'
 
-interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
-  error?: string;
-  hint?: string;
+interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
+  label: string
+  error?: string
+  hint?: string
 }
 
-export const FormField: React.FC<FormFieldProps> = ({
-  label,
-  error,
-  hint,
-  ...props
-}) => {
+export default function FormField({ label, error, hint, ...props }: FormFieldProps) {
   return (
     <div className="mb-4">
-      <Input
-        label={label}
-        error={error}
-        helperText={hint}
-        {...props}
-      />
+      <Input label={label} error={error} hint={hint} {...props} />
     </div>
-  );
-};
+  )
+}
+
+export { FormField }

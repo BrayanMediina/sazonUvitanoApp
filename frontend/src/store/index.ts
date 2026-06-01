@@ -68,11 +68,13 @@ interface UISlice {
 }
 
 // ─── STORE COMPLETO ──────────────────────────────────────────
-type AppStore = AuthSlice & TablesSlice & OrdersSlice &
+export type AppStore = AuthSlice & TablesSlice & OrdersSlice &
   DeliveriesSlice & ChatSlice & NotificationsSlice & UISlice
 
+type PersistedState = Pick<AppStore, 'user' | 'accessToken'>
+
 export const useAppStore = create<AppStore>()(
-  persist(
+  persist<AppStore, [], [], PersistedState>(
     (set) => ({
       // AUTH
       user: null,

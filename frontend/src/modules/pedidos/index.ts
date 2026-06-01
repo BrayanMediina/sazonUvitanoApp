@@ -1,3 +1,2 @@
-export { PedidosPage } from './PedidosPage';
-export { PedidoNuevoPage } from './PedidoNuevoPage';
-export { PedidoDetallePage } from './PedidoDetallePage';
+export { default as PedidoNuevoPage } from './PedidoNuevoPage'
+export { default as PedidoDetallePage } from './PedidoDetallePage'
