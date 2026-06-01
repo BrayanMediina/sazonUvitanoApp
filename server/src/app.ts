@@ -18,28 +18,35 @@ import reportsRoutes   from './modules/reports/reports.routes.js'
 
 export const app = express()
 
-// ─── CORS — acepta lista de orígenes separados por coma ──────
+// ─── CORS ─────────────────────────────────────────────────────
 const ALLOWED_ORIGINS = env.CORS_ORIGIN
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean)
 
+function isOriginAllowed(origin: string): boolean {
+  return ALLOWED_ORIGINS.some((o) => {
+    if (o === '*') return true
+    if (o.startsWith('*.')) return origin.endsWith(o.slice(1))   // *.vercel.app
+    return origin === o || origin.startsWith(o)
+  })
+}
+
 const corsOptions: Parameters<typeof cors>[0] = {
   origin: (origin, cb) => {
-    // Permite peticiones sin origin (curl, Postman, mismo servidor)
-    if (!origin) return cb(null, true)
-    if (ALLOWED_ORIGINS.some((o) => o === '*' || origin.startsWith(o))) {
-      cb(null, true)
-    } else {
-      cb(new Error(`CORS: origen no permitido — ${origin}`))
-    }
+    if (!origin) return cb(null, true)        // curl, Postman, SSR
+    if (isOriginAllowed(origin)) return cb(null, true)
+    cb(new Error(`CORS: origen no permitido — ${origin}`))
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }
 
 // ─── SEGURIDAD ────────────────────────────────────────────────
-app.use(helmet())
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))   // pre-flight explícito para todos los endpoints
 app.use(rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max:      env.RATE_LIMIT_MAX_REQUESTS,
