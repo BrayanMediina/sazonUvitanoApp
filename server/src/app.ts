@@ -18,9 +18,28 @@ import reportsRoutes   from './modules/reports/reports.routes.js'
 
 export const app = express()
 
+// ─── CORS — acepta lista de orígenes separados por coma ──────
+const ALLOWED_ORIGINS = env.CORS_ORIGIN
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean)
+
+const corsOptions: Parameters<typeof cors>[0] = {
+  origin: (origin, cb) => {
+    // Permite peticiones sin origin (curl, Postman, mismo servidor)
+    if (!origin) return cb(null, true)
+    if (ALLOWED_ORIGINS.some((o) => o === '*' || origin.startsWith(o))) {
+      cb(null, true)
+    } else {
+      cb(new Error(`CORS: origen no permitido — ${origin}`))
+    }
+  },
+  credentials: true,
+}
+
 // ─── SEGURIDAD ────────────────────────────────────────────────
 app.use(helmet())
-app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }))
+app.use(cors(corsOptions))
 app.use(rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max:      env.RATE_LIMIT_MAX_REQUESTS,
