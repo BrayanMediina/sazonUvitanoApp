@@ -26,24 +26,29 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
-      PORT: 4000
+      PORT: 3000
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/sazon_uvitano
-      JWT_SECRET: change-me-in-production
-      JWT_REFRESH_SECRET: change-me-refresh-in-production
+      JWT_SECRET: sazon-uvitano-secret-key-2025-change-in-prod!!
+      JWT_REFRESH_SECRET: sazon-uvitano-refresh-2025-change-in-prod!!
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 7d
+      CORS_ORIGIN: http://localhost:8080
     ports:
-      - '4000:4000'
+      - '3000:3000'
+    restart: unless-stopped
 
   frontend:
     build:
       context: .
       dockerfile: frontend/Dockerfile
       args:
-        VITE_API_URL: /api
-        VITE_SOCKET_URL: /
+        VITE_API_URL: ""
+        VITE_SOCKET_URL: http://192.168.1.8:8080
     depends_on:
       - backend
     ports:
-      - '3000:80'
+      - '8080:80'
+    restart: unless-stopped
 
 volumes:
   pgdata:

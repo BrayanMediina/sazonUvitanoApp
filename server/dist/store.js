@@ -1,8 +1,20 @@
 import bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 const adminHash = bcrypt.hashSync('123456', 10);
 export const store = {
     users: [
-        { id: 'user-admin', name: 'Administrador Sazón', email: 'admin@sazonuvitano.com', role: 'admin', passwordHash: adminHash }
+        {
+            id: 'user-admin',
+            name: 'Administrador Sazón',
+            document: '123456789',
+            email: 'admin@sazonuvitano.com',
+            phone: '3101234567',
+            role: 'administrador',
+            passwordHash: adminHash,
+            faceIdEnabled: false,
+            isActive: true,
+            createdAt: new Date().toISOString()
+        }
     ],
     tables: [
         { id: 'table-1', number: 1, status: 'Disponible', seats: 4 },
@@ -30,6 +42,45 @@ export const store = {
 };
 export function getUserByEmail(email) {
     return store.users.find((user) => user.email === email);
+}
+export function getUserByDocument(document) {
+    return store.users.find((user) => user.document === document);
+}
+export function getUserById(id) {
+    return store.users.find((user) => user.id === id);
+}
+export async function authenticateUserByDocument(document, password) {
+    const user = getUserByDocument(document);
+    if (!user || !user.isActive)
+        return null;
+    const isValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isValid)
+        return null;
+    return user;
+}
+export async function createUser(data) {
+    const existingDoc = getUserByDocument(data.document);
+    if (existingDoc)
+        throw new Error('Documento ya registrado');
+    if (data.email) {
+        const existingEmail = getUserByEmail(data.email);
+        if (existingEmail)
+            throw new Error('Email ya registrado');
+    }
+    const user = {
+        id: randomUUID(),
+        name: data.name,
+        document: data.document,
+        email: data.email,
+        phone: data.phone,
+        role: data.role,
+        passwordHash: await bcrypt.hash(data.password, 10),
+        faceIdEnabled: false,
+        isActive: true,
+        createdAt: new Date().toISOString()
+    };
+    store.users.push(user);
+    return user;
 }
 export function upsertTable(table) {
     const index = store.tables.findIndex((item) => item.id === table.id);
