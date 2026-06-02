@@ -3,11 +3,14 @@ import { useAppStore } from '../store'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
-function urlBase64ToUint8Array(base64: string): Uint8Array {
+function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
   const pad = '='.repeat((4 - (base64.length % 4)) % 4)
-  const b64  = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/')
-  const raw  = atob(b64)
-  return Uint8Array.from(Array.from(raw).map((c) => c.charCodeAt(0)))
+  const b64 = (base64 + pad).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(b64)
+  // new Uint8Array(n) garantiza ArrayBuffer (no SharedArrayBuffer) — requerido por PushManager
+  const arr = new Uint8Array(raw.length)
+  for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i)
+  return arr
 }
 
 async function fetchVapidKey(): Promise<string | null> {
@@ -61,5 +64,5 @@ export function usePushNotifications() {
   useEffect(() => {
     if (!user || !token) return
     subscribeDevice(token)
-  }, [user?.id, token]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user?.id, token])
 }
