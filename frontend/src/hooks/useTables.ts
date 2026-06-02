@@ -13,5 +13,6 @@ export function useTables() {
       return data
     },
     refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
   })
 }

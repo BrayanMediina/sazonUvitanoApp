@@ -8,8 +8,9 @@ import AppRouter from './routes'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: 60_000,          // 1 min por defecto — evita refetches innecesarios
       retry: 1,
+      refetchOnWindowFocus: false, // no disparar requests al volver de otra pestaña
     },
   },
 })

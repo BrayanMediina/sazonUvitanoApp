@@ -30,12 +30,29 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 app.options('*', cors({ origin: '*' }))   // pre-flight para todos los endpoints
-app.use(rateLimit({
+
+// Rate limiter general — permisivo para uso normal del restaurante
+// 300 req/min por IP cubre 5+ usuarios simultáneos con polling + navegación
+const apiLimiter = rateLimit({
   windowMs: env.RATE_LIMIT_WINDOW_MS,
   max:      env.RATE_LIMIT_MAX_REQUESTS,
   standardHeaders: true,
   legacyHeaders:   false,
-}))
+  message: { success: false, message: 'Demasiadas solicitudes. Espera un momento.' },
+  skip: (req) => req.method === 'OPTIONS',   // pre-flight no cuenta
+})
+
+// Rate limiter estricto solo para auth (antibrute-force)
+const authLimiter = rateLimit({
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max:      env.RATE_LIMIT_AUTH_MAX,
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message: { success: false, message: 'Demasiados intentos de acceso. Espera un momento.' },
+})
+
+app.use('/api/auth', authLimiter)   // estricto en login/register
+app.use('/api',      apiLimiter)    // permisivo en todo lo demás
 
 // ─── PARSERS ──────────────────────────────────────────────────
 app.use(express.json({ limit: '1mb' }))

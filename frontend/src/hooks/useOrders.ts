@@ -13,7 +13,8 @@ export function useOrders(status?: OrderStatus) {
       setOrders(data)
       return data
     },
-    refetchInterval: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -22,6 +23,7 @@ export function useOrder(id: string) {
     queryKey: ['orders', id],
     queryFn: () => ordersService.getById(id),
     enabled: !!id,
+    refetchOnWindowFocus: false,
   })
 }
 

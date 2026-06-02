@@ -13,7 +13,8 @@ export function useDeliveries(status?: DeliveryStatus) {
       setDeliveries(data)
       return data
     },
-    refetchInterval: 20_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
   })
 }
 
@@ -21,6 +22,7 @@ export function useMyDeliveries() {
   return useQuery({
     queryKey: ['deliveries', 'my'],
     queryFn: () => deliveriesService.getMyDeliveries(),
-    refetchInterval: 15_000,
+    refetchInterval: 30_000,
+    refetchOnWindowFocus: false,
   })
 }
