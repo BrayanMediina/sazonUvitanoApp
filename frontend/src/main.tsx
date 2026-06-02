@@ -1,10 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-
-// Registrar Service Worker para push notifications
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => { /* silencioso */ })
-}
+// VitePWA registra el SW automáticamente via injectRegister: 'auto'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import AppRouter from './routes'

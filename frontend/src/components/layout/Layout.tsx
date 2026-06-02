@@ -5,6 +5,7 @@ import OfflineBanner from '../ui/OfflineBanner'
 import { useAppStore } from '../../store'
 import { useGPS } from '../../hooks/useGPS'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import InstallBanner from '../ui/InstallBanner'
 
 interface LayoutProps {
   children: ReactNode
@@ -26,6 +27,7 @@ export default function Layout({ children, title, showBack, topBarRight }: Layou
         {children}
       </main>
       <BottomNav />
+      <InstallBanner />
     </div>
   )
 }
