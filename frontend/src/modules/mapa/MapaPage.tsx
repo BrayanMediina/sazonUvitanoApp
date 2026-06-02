@@ -20,10 +20,16 @@ export default function MapaPage() {
 
   const activeDrivers = (deliveries as import('../../types').Delivery[])
     .filter((d) => d.status === 'en_camino')
-    .map((d) => ({
-      delivery: d,
-      loc: d.driverId ? driverLocations[d.driverId] : undefined,
-    }))
+    .map((d) => {
+      // Priorizar ubicación en tiempo real (socket); caer en la última guardada en DB
+      const socketLoc = d.driverId ? driverLocations[d.driverId] : undefined
+      const loc = socketLoc ?? (
+        d.currentLat != null && d.currentLng != null && d.driverId
+          ? { driverId: d.driverId, lat: d.currentLat, lng: d.currentLng, timestamp: new Date(d.updatedAt).getTime() }
+          : undefined
+      )
+      return { delivery: d, loc }
+    })
     .filter((x) => x.loc)
 
   return (

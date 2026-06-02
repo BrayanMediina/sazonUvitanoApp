@@ -38,7 +38,9 @@ export const SOCKET_EVENTS = {
 
 // ─── INICIALIZAR ──────────────────────────────────────────────
 export function initSocket(token: string): Socket {
-  if (socket?.connected) return socket
+  // Retornar el socket existente si aún está activo (conectado o reconectando).
+  // Evita crear duplicados cuando el componente re-monta durante la conexión inicial.
+  if (socket?.active || socket?.connected) return socket
 
   socket = io(SOCKET_URL, {
     auth: { token },

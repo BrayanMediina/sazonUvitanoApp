@@ -1,10 +1,12 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Layout from '../../components/layout/Layout'
 import Button from '../../components/ui/Button'
 import Spinner from '../../components/ui/Spinner'
 import OrderStatusStepper from './components/OrderStatusStepper'
 import OrderItemRow from './components/OrderItemRow'
+import EditarPedidoSheet from './components/EditarPedidoSheet'
 import { ORDER_STATUS_CONFIG } from '../../constants/orderStatus'
 import { ordersService } from '../../services/api'
 import { useAppStore } from '../../store'
@@ -13,10 +15,18 @@ import { formatCurrency } from '../../utils/formatCurrency'
 import { formatRelative } from '../../utils/formatDate'
 
 export default function PedidoDetallePage() {
-  const { id }   = useParams<{ id: string }>()
-  const navigate = useNavigate()
-  const user     = useAppStore((s) => s.user)
-  const qc       = useQueryClient()
+  const { id }         = useParams<{ id: string }>()
+  const navigate       = useNavigate()
+  const [params]       = useSearchParams()
+  const user           = useAppStore((s) => s.user)
+  const qc             = useQueryClient()
+
+  const [editOpen, setEditOpen] = useState(false)
+
+  // Abrir editor automáticamente si viene de ?editar=1
+  useEffect(() => {
+    if (params.get('editar') === '1') setEditOpen(true)
+  }, [params])
 
   const { data: pedido, isLoading } = useOrder(id!)
 
@@ -30,8 +40,11 @@ export default function PedidoDetallePage() {
 
   const statusCfg = ORDER_STATUS_CONFIG[pedido.status]
   const nextStatus = statusCfg.next
-  const canAdvance  = ['cajero','administrador'].includes(user?.role ?? '') && !!nextStatus
-  const canPay      = canAdvance && pedido.status === 'entregado'
+  const canAdvance = ['cajero','administrador'].includes(user?.role ?? '') && !!nextStatus
+  const canPay     = canAdvance && pedido.status === 'entregado'
+
+  // Solo mesero y admin pueden editar, y solo mientras el pedido está en "tomado"
+  const canEdit = ['mesero','administrador'].includes(user?.role ?? '') && pedido.status === 'tomado'
 
   return (
     <Layout showBack title="Pedido">
@@ -54,7 +67,21 @@ export default function PedidoDetallePage() {
 
         {/* Ítems */}
         <div className="bg-white border border-stone-100 rounded-2xl p-4">
-          <p className="text-sm font-semibold text-stone-800 mb-3">Productos</p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-stone-800">Productos</p>
+            {canEdit && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-semibold text-brand-700 bg-brand-50 px-3 py-1.5 rounded-xl active:bg-brand-100 transition-colors"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar
+              </button>
+            )}
+          </div>
+
           {pedido.items.map((item) => (
             <OrderItemRow
               key={item.id}
@@ -75,7 +102,7 @@ export default function PedidoDetallePage() {
           </div>
         </div>
 
-        {/* Acciones */}
+        {/* Acciones de estado */}
         {canAdvance && nextStatus && !canPay && (
           <Button
             fullWidth
@@ -92,6 +119,15 @@ export default function PedidoDetallePage() {
           </Button>
         )}
       </div>
+
+      {/* Editor de pedido */}
+      {canEdit && (
+        <EditarPedidoSheet
+          isOpen={editOpen}
+          onClose={() => setEditOpen(false)}
+          pedido={pedido}
+        />
+      )}
     </Layout>
   )
 }

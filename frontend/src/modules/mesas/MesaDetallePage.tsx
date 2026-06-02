@@ -82,14 +82,23 @@ export default function MesaDetallePage() {
               <p className="text-base font-bold text-brand-900">{formatCurrency(pedido.total)}</p>
             </div>
 
-            <Button
-              fullWidth
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/pedidos/${pedido.id}`)}
-            >
-              Ver pedido completo
-            </Button>
+            <div className={`grid gap-2 ${canNewOrder && pedido.status === 'tomado' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(`/pedidos/${pedido.id}`)}
+              >
+                Ver detalle
+              </Button>
+              {canNewOrder && pedido.status === 'tomado' && (
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/pedidos/${pedido.id}?editar=1`)}
+                >
+                  ✏️ Editar
+                </Button>
+              )}
+            </div>
 
             {canPayOrder && pedido.status === 'entregado' && (
               <Button fullWidth size="md" onClick={() => navigate(`/caja`)}>

@@ -5,11 +5,20 @@
 import type {
   AuthResponse, User, Table, Order,
   Product, Payment, Delivery, DailySummary,
-  PaginatedResponse, PaymentMethod,
-  DeliveryAddress, Role
+  PaginatedResponse, PaymentMethod, Role
 } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+
+// Omite keys con valor undefined/null para evitar "?category=undefined" en la URL
+function toQuery(params: Record<string, unknown>): string {
+  const sp = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== null) sp.set(k, String(v))
+  }
+  const s = sp.toString()
+  return s ? `?${s}` : ''
+}
 
 // ─── CLIENTE HTTP BASE ────────────────────────────────────────
 async function http<T>(
@@ -26,8 +35,8 @@ async function http<T>(
     },
   })
 
-  if (res.status === 401) {
-    // Intentar refresh automático
+  if (res.status === 401 && !path.startsWith('/api/auth/')) {
+    // Solo intentar refresh para endpoints protegidos, no para login/register
     const refreshed = await refreshToken()
     if (!refreshed) {
       localStorage.removeItem('sazon-access')
@@ -39,7 +48,7 @@ async function http<T>(
   }
 
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: 'Error desconocido' }))
+    const err = await res.json().catch(() => ({ message: 'Servidor no disponible. Intenta de nuevo en unos segundos.' }))
     throw new Error(err.message ?? 'Error en la solicitud')
   }
 
@@ -83,9 +92,12 @@ async function refreshToken(): Promise<boolean> {
       body: JSON.stringify({ refreshToken: refresh }),
     })
     if (!res.ok) return false
-    const data = await res.json()
-    localStorage.setItem('sazon-access', data.accessToken)
-    localStorage.setItem('sazon-refresh', data.refreshToken)
+    const body = await res.json()
+    // El backend envuelve en { success, data: { accessToken, refreshToken } }
+    const tokens = (body?.data ?? body) as { accessToken: string; refreshToken: string }
+    if (!tokens?.accessToken) return false
+    localStorage.setItem('sazon-access', tokens.accessToken)
+    localStorage.setItem('sazon-refresh', tokens.refreshToken)
     return true
   } catch {
     return false
@@ -95,7 +107,7 @@ async function refreshToken(): Promise<boolean> {
 // ─── USUARIOS (Admin) ─────────────────────────────────────────
 export const usersService = {
   getAll: (params?: { role?: Role; page?: number; limit?: number }) =>
-    http<PaginatedResponse<User>>(`/api/users?${new URLSearchParams(params as any)}`),
+    http<PaginatedResponse<User>>(`/api/users${toQuery(params ?? {})}`),
 
   getById: (id: string) =>
     http<User>(`/api/users/${id}`),
@@ -143,7 +155,7 @@ export const tablesService = {
 // ─── PRODUCTOS ────────────────────────────────────────────────
 export const productsService = {
   getAll: (params?: { category?: string; isAvailable?: boolean }) =>
-    http<Product[]>(`/api/products?${new URLSearchParams(params as any)}`),
+    http<Product[]>(`/api/products${toQuery(params ?? {})}`),
 
   getById: (id: string) =>
     http<Product>(`/api/products/${id}`),
@@ -164,7 +176,7 @@ export const productsService = {
 // ─── PEDIDOS ──────────────────────────────────────────────────
 export const ordersService = {
   getAll: (params?: { status?: string; tableId?: string; type?: string }) =>
-    http<Order[]>(`/api/orders?${new URLSearchParams(params as any)}`),
+    http<Order[]>(`/api/orders${toQuery(params ?? {})}`),
 
   getById: (id: string) =>
     http<Order>(`/api/orders/${id}`),
@@ -209,13 +221,13 @@ export const paymentsService = {
     http<DailySummary>(`/api/payments/report/daily${date ? `?date=${date}` : ''}`),
 
   getHistory: (params?: { from?: string; to?: string; page?: number }) =>
-    http<PaginatedResponse<Payment>>(`/api/payments?${new URLSearchParams(params as any)}`),
+    http<PaginatedResponse<Payment>>(`/api/payments${toQuery(params ?? {})}`),
 }
 
 // ─── DOMICILIOS ───────────────────────────────────────────────
 export const deliveriesService = {
   getAll: (params?: { status?: string }) =>
-    http<Delivery[]>(`/api/deliveries?${new URLSearchParams(params as any)}`),
+    http<Delivery[]>(`/api/deliveries${toQuery(params ?? {})}`),
 
   getById: (id: string) =>
     http<Delivery>(`/api/deliveries/${id}`),
@@ -224,11 +236,12 @@ export const deliveriesService = {
     http<Delivery[]>('/api/deliveries/my'),
 
   create: (body: {
-    orderId?: string
     customerName: string
     customerPhone: string
-    address: DeliveryAddress
-    items?: { productId: string; quantity: number; notes?: string }[]
+    street: string
+    neighborhood?: string
+    reference?: string
+    items: { productId: string; quantity: number; notes?: string }[]
   }) =>
     http<Delivery>('/api/deliveries', { method: 'POST', body: JSON.stringify(body) }),
 

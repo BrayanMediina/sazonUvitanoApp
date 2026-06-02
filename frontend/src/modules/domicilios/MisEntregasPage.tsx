@@ -40,8 +40,8 @@ export default function MisEntregasPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="font-semibold text-stone-800">{d.customerName}</p>
-                    <p className="text-xs text-stone-400 mt-0.5">📍 {d.address.street}</p>
-                    {d.address.reference && <p className="text-xs text-stone-400 italic">{d.address.reference}</p>}
+                    <p className="text-xs text-stone-400 mt-0.5">📍 {d.street}</p>
+                    {d.reference && <p className="text-xs text-stone-400 italic">{d.reference}</p>}
                   </div>
                   <DomicilioStatusBadge status={d.status} />
                 </div>
@@ -104,7 +104,7 @@ export default function MisEntregasPage() {
               <div key={d.id} className="bg-white border border-stone-100 rounded-xl p-3 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-stone-700">{d.customerName}</p>
-                  <p className="text-xs text-stone-400">{d.address.street}</p>
+                  <p className="text-xs text-stone-400">{d.street}</p>
                 </div>
                 <div className="text-right">
                   <DomicilioStatusBadge status={d.status} />

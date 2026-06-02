@@ -135,7 +135,12 @@ export interface Delivery {
   driverId?: string
   driver?: User
   status: DeliveryStatus
-  address: DeliveryAddress
+  // Campos de dirección planos (tal como los devuelve el backend/Prisma)
+  street: string
+  neighborhood?: string
+  reference?: string
+  addressLat?: number
+  addressLng?: number
   currentLat?: number
   currentLng?: number
   estimatedTime?: number

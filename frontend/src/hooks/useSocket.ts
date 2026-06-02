@@ -22,6 +22,7 @@ export function useSocketInit() {
   useEffect(() => {
     if (!token || !user) return
     initSocket(token)
-    return () => { disconnectSocket() }
+    // No desconectar en cleanup: el socket persiste entre páginas.
+    // disconnectSocket() solo se llama en useAuth.logout()
   }, [token, user])
 }

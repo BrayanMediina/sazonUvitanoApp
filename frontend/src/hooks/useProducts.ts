@@ -6,6 +6,6 @@ export function useProducts(category?: ProductCategory, onlyAvailable = false) {
   return useQuery({
     queryKey: ['products', category, onlyAvailable],
     queryFn: () => productsService.getAll({ category, isAvailable: onlyAvailable || undefined }),
-    staleTime: 60_000,
+    staleTime: 0,
   })
 }

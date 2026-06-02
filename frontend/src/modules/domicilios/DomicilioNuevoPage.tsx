@@ -54,7 +54,9 @@ export default function DomicilioNuevoPage() {
       return deliveriesService.create({
         customerName: data.customerName,
         customerPhone: data.customerPhone,
-        address: { street: data.street, neighborhood: data.neighborhood, reference: data.reference },
+        street: data.street,
+        neighborhood: data.neighborhood,
+        reference: data.reference,
         items: cart.map((c) => ({ productId: c.productId, quantity: c.qty })),
       })
     },

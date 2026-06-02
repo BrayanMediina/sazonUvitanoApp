@@ -21,9 +21,9 @@ export default function DomicilioCard({ delivery, onAsignar }: DomicilioCardProp
       </div>
 
       <div className="text-xs text-stone-600">
-        <p>📍 {delivery.address.street}</p>
-        {delivery.address.neighborhood && <p className="text-stone-400">{delivery.address.neighborhood}</p>}
-        {delivery.address.reference && <p className="text-stone-400 italic">{delivery.address.reference}</p>}
+        <p>📍 {delivery.street}</p>
+        {delivery.neighborhood && <p className="text-stone-400">{delivery.neighborhood}</p>}
+        {delivery.reference && <p className="text-stone-400 italic">{delivery.reference}</p>}
       </div>
 
       {delivery.driver && (
