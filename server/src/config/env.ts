@@ -10,8 +10,8 @@ const envSchema = z.object({
   JWT_EXPIRES_IN:     z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   CORS_ORIGIN:        z.string().default('http://localhost:5173,http://localhost:8080,*.vercel.app'),
-  RATE_LIMIT_WINDOW_MS:     z.coerce.number().default(900_000),
-  RATE_LIMIT_MAX_REQUESTS:  z.coerce.number().default(100),
+  RATE_LIMIT_WINDOW_MS:     z.coerce.number().default(900_000),   // 15 min
+  RATE_LIMIT_MAX_REQUESTS:  z.coerce.number().default(500),       // 500 req/15 min por IP
   // Web Push (VAPID) — opcionales para que dev funcione sin configurar
   VAPID_SUBJECT:     z.string().default('mailto:julian.mediina@gmail.com'),
   VAPID_PUBLIC_KEY:  z.string().optional(),

@@ -31,7 +31,8 @@ export default function DomicilioNuevoPage() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [cart, setCart] = useState<CartItem[]>([])
-  const { data: products = [] } = useProducts()
+  // Misma query key que MenuCatalog (onlyAvailable=true) → React Query deduplica el request
+  const { data: products = [] } = useProducts(undefined, true)
 
   const { register, handleSubmit, getValues, formState: { errors } } = useForm<ClienteData>({
     resolver: zodResolver(clienteSchema),

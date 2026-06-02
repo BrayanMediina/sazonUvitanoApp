@@ -19,7 +19,8 @@ export default function PedidoNuevoPage() {
   const [notes, setNotes]     = useState('')
   const [showCart, setShowCart] = useState(false)
 
-  const { data: products = [] } = useProducts()
+  // Misma query key que MenuCatalog → React Query deduplica el request
+  const { data: products = [] } = useProducts(undefined, true)
 
   const totalItems = cart.reduce((s, c) => s + c.qty, 0)
   const total      = cart.reduce((sum, c) => {
