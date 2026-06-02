@@ -5,6 +5,7 @@ import { requireRole } from '../../middlewares/role.middleware.js'
 import { validate }    from '../../middlewares/validate.middleware.js'
 import * as svc        from './deliveries.service.js'
 import { emitToRoles, emitToUser } from '../../sockets/socket.server.js'
+import { pushToUser, pushToRoles } from '../../services/push.service.js'
 import type { AuthRequest }        from '../../middlewares/auth.middleware.js'
 
 const router = Router()
@@ -36,6 +37,11 @@ router.post('/', requireAuth, requireRole('administrador','cajero'), validate(z.
   try {
     const delivery = await svc.create({ ...req.body, createdBy: req.user!.id })
     emitToRoles(['cajero','administrador'], 'delivery:created', { delivery })
+    pushToRoles(['cajero','administrador'], {
+      title: '🛵 Nuevo domicilio',
+      body:  `Para ${delivery.customerName}`,
+      url:   '/domicilios',
+    })
     res.status(201).json({ success: true, data: delivery })
   } catch (e) { next(e) }
 })
@@ -47,6 +53,12 @@ router.patch('/:id/assign', requireAuth, requireRole('administrador','cajero'), 
     const delivery = await svc.assign(req.params['id'] as string, req.body.driverId)
     emitToUser(req.body.driverId, 'delivery:created', { delivery })
     emitToRoles(['cajero','administrador'], 'delivery:updated', { delivery })
+    // Notificar al domiciliario asignado
+    pushToUser(req.body.driverId, {
+      title: '🛵 Nueva entrega asignada',
+      body:  `Para ${delivery.customerName} — ${delivery.street}`,
+      url:   '/mis-entregas',
+    })
     res.json({ success: true, data: delivery })
   } catch (e) { next(e) }
 })

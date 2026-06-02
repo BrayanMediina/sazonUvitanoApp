@@ -5,6 +5,7 @@ import { requireRole } from '../../middlewares/role.middleware.js'
 import { validate }    from '../../middlewares/validate.middleware.js'
 import * as svc        from './orders.service.js'
 import { emitToAll, emitToRoles } from '../../sockets/socket.server.js'
+import { pushToRoles }            from '../../services/push.service.js'
 import type { AuthRequest } from '../../middlewares/auth.middleware.js'
 
 const router = Router()
@@ -37,6 +38,11 @@ router.post('/', requireAuth, requireRole('administrador','mesero'), validate(cr
     const order = await svc.create({ ...req.body, createdBy: req.user!.id })
     emitToRoles(['cajero','administrador'], 'order:created', { order })
     emitToAll('table:updated', { table: order.table })
+    pushToRoles(['cajero','administrador'], {
+      title: '🍽️ Nuevo pedido',
+      body:  `${order.table ? `Mesa ${order.table.number}` : 'Domicilio'} · $${order.total.toLocaleString('es-CO')}`,
+      url:   `/pedidos/${order.id}`,
+    })
     res.status(201).json({ success: true, data: order })
   } catch (e) { next(e) }
 })
@@ -49,6 +55,14 @@ router.patch('/:id/status', requireAuth, requireRole('administrador','cajero'), 
     emitToAll('order:updated', { order })
     emitToAll('order:status', { orderId: order.id, status: order.status })
     if (order.table) emitToAll('table:updated', { table: order.table })
+    // Notificar al mesero cuando el pedido está listo para servir
+    if (order.status === 'listo') {
+      pushToRoles(['mesero','administrador'], {
+        title: '✅ Pedido listo',
+        body:  `${order.table ? `Mesa ${order.table.number}` : 'Domicilio'} — listo para entregar`,
+        url:   `/pedidos/${order.id}`,
+      })
+    }
     res.json({ success: true, data: order })
   } catch (e) { next(e) }
 })

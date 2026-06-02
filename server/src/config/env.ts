@@ -12,6 +12,10 @@ const envSchema = z.object({
   CORS_ORIGIN:        z.string().default('http://localhost:5173,http://localhost:8080,*.vercel.app'),
   RATE_LIMIT_WINDOW_MS:     z.coerce.number().default(900_000),
   RATE_LIMIT_MAX_REQUESTS:  z.coerce.number().default(100),
+  // Web Push (VAPID) — opcionales para que dev funcione sin configurar
+  VAPID_SUBJECT:     z.string().default('mailto:julian.mediina@gmail.com'),
+  VAPID_PUBLIC_KEY:  z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
 })
 
 export const env = envSchema.parse(process.env)

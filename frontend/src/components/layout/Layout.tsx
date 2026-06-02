@@ -4,6 +4,7 @@ import BottomNav from './BottomNav'
 import OfflineBanner from '../ui/OfflineBanner'
 import { useAppStore } from '../../store'
 import { useGPS } from '../../hooks/useGPS'
+import { usePushNotifications } from '../../hooks/usePushNotifications'
 
 interface LayoutProps {
   children: ReactNode
@@ -14,7 +15,8 @@ interface LayoutProps {
 
 export default function Layout({ children, title, showBack, topBarRight }: LayoutProps) {
   const isOnline = useAppStore((s) => s.isOnline)
-  useGPS() // Activo en todas las páginas; solo opera cuando rol === 'domiciliario'
+  useGPS()                 // Solo activo para domiciliario
+  usePushNotifications()   // Solicita permiso y suscribe al canal VAPID
 
   return (
     <div className="flex flex-col min-h-dvh bg-stone-50">

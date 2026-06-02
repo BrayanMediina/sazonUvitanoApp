@@ -34,6 +34,9 @@
    JWT_EXPIRES_IN=15m
    JWT_REFRESH_EXPIRES_IN=7d
    CORS_ORIGIN=https://sazon-uvitano.vercel.app
+   VAPID_SUBJECT=mailto:julian.mediina@gmail.com
+   VAPID_PUBLIC_KEY=BCTJCyAlRdnUAETXTvL14iQ5ECOIfa8Cu0xoxk1AaIn0nU1OuKF4XUUGe-iZneneFe14dHYCRRdy2z4O0THQvnU
+   VAPID_PRIVATE_KEY=87oX8WSCTjRQr8hF4671LnZvrypBo2opmEPAth0KQok
    ```
 5. Deploy → esperar que termine → copiar la URL pública (ej: `https://sazon-uvitano-backend.onrender.com`)
 
