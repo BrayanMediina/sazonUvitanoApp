@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore, type AppStore } from '../store'
-import { initSocket, disconnectSocket } from '../sockets/socketService'
+import { initSocket } from '../sockets/socketService'
 
 export function useSocket() {
   const user  = useAppStore((s) => (s as AppStore).user)
