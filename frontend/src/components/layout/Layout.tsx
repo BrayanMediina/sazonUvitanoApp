@@ -3,6 +3,7 @@ import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import OfflineBanner from '../ui/OfflineBanner'
 import { useAppStore } from '../../store'
+import { useGPS } from '../../hooks/useGPS'
 
 interface LayoutProps {
   children: ReactNode
@@ -13,6 +14,7 @@ interface LayoutProps {
 
 export default function Layout({ children, title, showBack, topBarRight }: LayoutProps) {
   const isOnline = useAppStore((s) => s.isOnline)
+  useGPS() // Activo en todas las páginas; solo opera cuando rol === 'domiciliario'
 
   return (
     <div className="flex flex-col min-h-dvh bg-stone-50">

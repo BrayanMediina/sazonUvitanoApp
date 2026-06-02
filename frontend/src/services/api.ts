@@ -5,7 +5,7 @@
 import type {
   AuthResponse, User, Table, Order,
   Product, Payment, Delivery, DailySummary,
-  PaginatedResponse, PaymentMethod, Role
+  PaginatedResponse, PaymentMethod, Role, ChatMessage
 } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
@@ -262,6 +262,11 @@ export const deliveriesService = {
       method: 'PATCH',
       body: JSON.stringify({ lat, lng }),
     }),
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────
+export const chatService = {
+  getMessages: () => http<ChatMessage[]>('/api/chat'),
 }
 
 // ─── REPORTES ─────────────────────────────────────────────────

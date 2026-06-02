@@ -2,7 +2,6 @@ import Layout from '../../components/layout/Layout'
 import { useAppStore, type AppStore } from '../../store'
 import { useSocketInit } from '../../hooks/useSocket'
 import { useOnlineStatus } from '../../hooks/useOnlineStatus'
-import { useGPS } from '../../hooks/useGPS'
 import { useTables } from '../../hooks/useTables'
 import { useOrders } from '../../hooks/useOrders'
 import { useDeliveries } from '../../hooks/useDeliveries'
@@ -32,7 +31,6 @@ function MetricCard({ label, value, icon, bgClass, textClass }: MetricCardProps)
 export default function DashboardPage() {
   useSocketInit()
   useOnlineStatus()
-  useGPS()
   useTables()
   useOrders()
   useDeliveries()

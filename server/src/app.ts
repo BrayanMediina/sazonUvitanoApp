@@ -15,6 +15,7 @@ import ordersRoutes    from './modules/orders/orders.routes.js'
 import paymentsRoutes  from './modules/payments/payments.routes.js'
 import deliveriesRoutes from './modules/deliveries/deliveries.routes.js'
 import reportsRoutes   from './modules/reports/reports.routes.js'
+import chatRoutes      from './modules/chat/chat.routes.js'
 
 export const app = express()
 
@@ -51,6 +52,7 @@ app.use('/api/orders',     ordersRoutes)
 app.use('/api/payments',   paymentsRoutes)
 app.use('/api/deliveries', deliveriesRoutes)
 app.use('/api/reports',    reportsRoutes)
+app.use('/api/chat',       chatRoutes)
 
 // ─── 404 ──────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ success: false, message: 'Ruta no encontrada' }))

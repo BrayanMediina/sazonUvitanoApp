@@ -47,6 +47,7 @@ interface ChatSlice {
   messages: ChatMessage[]
   unreadCount: number
   addMessage: (msg: ChatMessage) => void
+  initMessages: (msgs: ChatMessage[]) => void
   markAllRead: () => void
 }
 
@@ -122,10 +123,16 @@ export const useAppStore = create<AppStore>()(
       messages: [],
       unreadCount: 0,
       addMessage: (msg) =>
-        set((s) => ({
-          messages: [...s.messages.slice(-100), msg],
-          unreadCount: s.unreadCount + 1,
-        })),
+        set((s) => {
+          // Ignorar duplicados (historial ya cargado + eco del socket)
+          if (s.messages.some((m) => m.id === msg.id)) return s
+          return {
+            messages: [...s.messages.slice(-99), msg],
+            unreadCount: s.unreadCount + 1,
+          }
+        }),
+      initMessages: (msgs) =>
+        set({ messages: msgs.slice(-100), unreadCount: 0 }),
       markAllRead: () => set({ unreadCount: 0 }),
 
       // NOTIFICATIONS

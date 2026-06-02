@@ -4,6 +4,7 @@
 // ============================================================
 import { io, Socket } from 'socket.io-client'
 import { useAppStore, type AppStore } from '../store'
+import type { ChatMessage } from '../types'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000'
 
@@ -91,8 +92,9 @@ export function initSocket(token: string): Socket {
     store.updateDriverLocation(update)
   })
 
-  socket.on(SOCKET_EVENTS.NEW_MESSAGE, (msg) => {
-    store.addMessage(msg)
+  socket.on(SOCKET_EVENTS.NEW_MESSAGE, (data: { message: ChatMessage }) => {
+    // El servidor envuelve el mensaje en { message: {...} }
+    store.addMessage(data.message ?? (data as unknown as ChatMessage))
   })
 
   socket.on(SOCKET_EVENTS.CONNECT, () => {
