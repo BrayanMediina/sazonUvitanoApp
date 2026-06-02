@@ -235,6 +235,9 @@ export const deliveriesService = {
   getMyDeliveries: () =>
     http<Delivery[]>('/api/deliveries/my'),
 
+  getAvailableDrivers: () =>
+    http<{ id: string; name: string; phone?: string }[]>('/api/deliveries/available-drivers'),
+
   create: (body: {
     customerName: string
     customerPhone: string

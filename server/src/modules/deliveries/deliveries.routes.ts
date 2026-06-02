@@ -14,6 +14,11 @@ router.get('/', requireAuth, requireRole('administrador','cajero'), async (req, 
   try { res.json({ success: true, data: await svc.getAll(req.query as any) }) } catch (e) { next(e) }
 })
 
+// Domiciliarios activos disponibles para asignar (accesible por cajero y admin)
+router.get('/available-drivers', requireAuth, requireRole('administrador','cajero'), async (_req, res, next) => {
+  try { res.json({ success: true, data: await svc.getAvailableDrivers() }) } catch (e) { next(e) }
+})
+
 router.get('/my', requireAuth, requireRole('domiciliario'), async (req: AuthRequest, res, next) => {
   try { res.json({ success: true, data: await svc.getMyDeliveries(req.user!.id) }) } catch (e) { next(e) }
 })

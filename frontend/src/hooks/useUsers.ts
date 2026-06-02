@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { usersService } from '../services/api'
+import { usersService, deliveriesService } from '../services/api'
 import type { Role } from '../types'
 
 export function useUsers(role?: Role) {
@@ -11,9 +11,8 @@ export function useUsers(role?: Role) {
 
 export function useDrivers() {
   return useQuery({
-    queryKey: ['users', 'domiciliario'],
-    queryFn: () => usersService.getAll({ role: 'domiciliario' }),
-    select: (data) => data.data.filter((u) => u.isActive),
+    queryKey: ['deliveries', 'available-drivers'],
+    queryFn: () => deliveriesService.getAvailableDrivers(),
   })
 }
 

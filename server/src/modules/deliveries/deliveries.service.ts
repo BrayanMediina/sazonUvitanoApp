@@ -77,6 +77,14 @@ export async function updateStatus(id: string, status: DeliveryStatus) {
   return prisma.delivery.update({ where: { id }, data: { status }, include: INCLUDE })
 }
 
+export async function getAvailableDrivers() {
+  return prisma.user.findMany({
+    where: { role: 'domiciliario', isActive: true },
+    select: { id: true, name: true, phone: true },
+    orderBy: { name: 'asc' },
+  })
+}
+
 export async function updateLocation(driverId: string, lat: number, lng: number) {
   return prisma.delivery.updateMany({
     where: { driverId, status: 'en_camino' },
