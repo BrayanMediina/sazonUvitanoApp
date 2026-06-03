@@ -1,37 +1,28 @@
 // ============================================================
 // SOCKET SERVICE — El Sazón Uvitano PWA
-// src/sockets/socketService.ts  (Socket.IO client)
 // ============================================================
 import { io, Socket } from 'socket.io-client'
 import { useAppStore, type AppStore } from '../store'
-import type { ChatMessage } from '../types'
+import type { ChatMessage, Order, Table, Delivery, LocationUpdate } from '../types'
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? 'http://localhost:3000'
 
 let socket: Socket | null = null
 
-// ─── EVENTOS DE ENTRADA (servidor → cliente) ──────────────────
+// Helper: estado fresco en cada evento (nunca captura snapshot stale)
+const store = () => useAppStore.getState() as AppStore
+
+// ─── EVENTOS ─────────────────────────────────────────────────
 export const SOCKET_EVENTS = {
-  // Pedidos
   ORDER_CREATED:    'order:created',
   ORDER_UPDATED:    'order:updated',
   ORDER_STATUS:     'order:status',
-
-  // Mesas
   TABLE_UPDATED:    'table:updated',
-
-  // Domicilios
   DELIVERY_CREATED: 'delivery:created',
   DELIVERY_UPDATED: 'delivery:updated',
   LOCATION_UPDATE:  'delivery:location',
-
-  // Chat
   NEW_MESSAGE:      'chat:message',
-
-  // Pagos
   PAYMENT_DONE:     'payment:completed',
-
-  // Sistema
   CONNECT:          'connect',
   DISCONNECT:       'disconnect',
   ERROR:            'connect_error',
@@ -39,42 +30,53 @@ export const SOCKET_EVENTS = {
 
 // ─── INICIALIZAR ──────────────────────────────────────────────
 export function initSocket(token: string): Socket {
-  // Retornar el socket existente si aún está activo (conectado o reconectando).
-  // Evita crear duplicados cuando el componente re-monta durante la conexión inicial.
   if (socket?.active || socket?.connected) return socket
 
   socket = io(SOCKET_URL, {
     auth: { token },
-    transports: ['websocket'],
-    reconnectionAttempts: 5,
-    reconnectionDelay: 2000,
+    // polling primero: handshake HTTP más estable, luego upgrade a WS
+    transports: ['polling', 'websocket'],
+    reconnectionAttempts: Infinity,   // nunca abandonar — Render puede tardar 30 s
+    reconnectionDelay:    1_000,
+    reconnectionDelayMax: 30_000,
+    timeout:              20_000,
   })
 
-  const store = useAppStore.getState() as AppStore
-
-  socket.on(SOCKET_EVENTS.ORDER_CREATED, (order) => {
-    store.setOrders([order, ...store.orders])
-    store.addNotification({
+  // ── Pedidos ────────────────────────────────────────────────
+  // El servidor emite { order } — destructuramos el wrapper
+  socket.on(SOCKET_EVENTS.ORDER_CREATED, ({ order }: { order: Order }) => {
+    const s = store()
+    if (s.orders.some((o) => o.id === order.id)) return   // dedup
+    s.setOrders([order, ...s.orders])
+    s.addNotification({
       id: crypto.randomUUID(),
       type: 'nuevo_pedido',
       title: 'Nuevo pedido',
-      body: `Mesa ${order.table?.number ?? 'domicilio'} — $${order.total}`,
+      body: `${order.table ? `Mesa ${order.table.number}` : 'Domicilio'} — $${order.total.toLocaleString('es-CO')}`,
       read: false,
       createdAt: new Date().toISOString(),
     })
   })
 
-  socket.on(SOCKET_EVENTS.ORDER_UPDATED, (order) => {
-    store.updateOrder(order.id, order)
+  socket.on(SOCKET_EVENTS.ORDER_UPDATED, ({ order }: { order: Order }) => {
+    store().updateOrder(order.id, order)
   })
 
-  socket.on(SOCKET_EVENTS.TABLE_UPDATED, (table) => {
-    store.updateTable(table.id, table)
+  socket.on(SOCKET_EVENTS.ORDER_STATUS, ({ orderId, status }: { orderId: string; status: Order['status'] }) => {
+    store().updateOrder(orderId, { status })
   })
 
-  socket.on(SOCKET_EVENTS.DELIVERY_CREATED, (delivery) => {
-    store.setDeliveries([delivery, ...store.deliveries])
-    store.addNotification({
+  // ── Mesas ──────────────────────────────────────────────────
+  socket.on(SOCKET_EVENTS.TABLE_UPDATED, ({ table }: { table: Table }) => {
+    store().updateTable(table.id, table)
+  })
+
+  // ── Domicilios ─────────────────────────────────────────────
+  socket.on(SOCKET_EVENTS.DELIVERY_CREATED, ({ delivery }: { delivery: Delivery }) => {
+    const s = store()
+    if (s.deliveries.some((d) => d.id === delivery.id)) return   // dedup
+    s.setDeliveries([delivery, ...s.deliveries])
+    s.addNotification({
       id: crypto.randomUUID(),
       type: 'nuevo_domicilio',
       title: 'Nuevo domicilio',
@@ -84,36 +86,42 @@ export function initSocket(token: string): Socket {
     })
   })
 
-  socket.on(SOCKET_EVENTS.DELIVERY_UPDATED, (delivery) => {
-    store.updateDelivery(delivery.id, delivery)
+  socket.on(SOCKET_EVENTS.DELIVERY_UPDATED, ({ delivery }: { delivery: Delivery }) => {
+    store().updateDelivery(delivery.id, delivery)
   })
 
-  socket.on(SOCKET_EVENTS.LOCATION_UPDATE, (update) => {
-    store.updateDriverLocation(update)
+  socket.on(SOCKET_EVENTS.LOCATION_UPDATE, (update: LocationUpdate) => {
+    store().updateDriverLocation(update)
   })
 
+  // ── Chat ───────────────────────────────────────────────────
   socket.on(SOCKET_EVENTS.NEW_MESSAGE, (data: { message: ChatMessage }) => {
-    // El servidor envuelve el mensaje en { message: {...} }
-    store.addMessage(data.message ?? (data as unknown as ChatMessage))
+    store().addMessage(data.message ?? (data as unknown as ChatMessage))
   })
 
+  // ── Estado de conexión ─────────────────────────────────────
   socket.on(SOCKET_EVENTS.CONNECT, () => {
-    store.setOnline(true)
+    store().setOnline(true)
+    console.info('[Socket] Conectado:', socket?.id)
   })
 
-  socket.on(SOCKET_EVENTS.DISCONNECT, () => {
-    store.setOnline(false)
+  socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
+    store().setOnline(false)
+    console.warn('[Socket] Desconectado:', reason)
+  })
+
+  socket.on(SOCKET_EVENTS.ERROR, (err) => {
+    console.warn('[Socket] Error de conexión:', err.message)
   })
 
   return socket
 }
 
-// ─── EMITIR UBICACIÓN GPS ─────────────────────────────────────
+// ─── EMITIR ───────────────────────────────────────────────────
 export function emitLocation(lat: number, lng: number) {
   socket?.emit('driver:location', { lat, lng, timestamp: Date.now() })
 }
 
-// ─── EMITIR MENSAJE CHAT ──────────────────────────────────────
 export function emitChatMessage(content: string) {
   socket?.emit('chat:send', { content })
 }
@@ -124,5 +132,4 @@ export function disconnectSocket() {
   socket = null
 }
 
-// ─── HOOK DE ACCESO AL SOCKET ─────────────────────────────────
 export function getSocket() { return socket }

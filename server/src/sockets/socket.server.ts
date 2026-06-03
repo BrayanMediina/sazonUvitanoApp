@@ -7,9 +7,22 @@ import { env }                       from '../config/env.js'
 let io: Server | undefined
 
 export function createSocketServer(server: HttpServer) {
+  // CORS: auth por Bearer token (no cookies), podemos abrir a cualquier origen.
+  // env.CORS_ORIGIN puede ser un string con comas o '*' — normalizamos a array.
+  const corsOrigin: string | string[] =
+    env.CORS_ORIGIN === '*'
+      ? '*'
+      : env.CORS_ORIGIN.includes(',')
+        ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
+        : env.CORS_ORIGIN
+
   io = new Server(server, {
-    cors: { origin: env.CORS_ORIGIN, credentials: true },
-    transports: ['websocket', 'polling'],
+    cors: { origin: corsOrigin, methods: ['GET', 'POST'] },
+    // polling primero: más compatible con proxies/firewalls; luego upgrade a WS
+    transports: ['polling', 'websocket'],
+    // Render free puede tardar en despertar — ser paciente con pings
+    pingTimeout:  60_000,
+    pingInterval: 25_000,
   })
 
   // Auth middleware
