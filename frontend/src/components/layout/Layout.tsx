@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import TopBar from './TopBar'
 import BottomNav from './BottomNav'
 import OfflineBanner from '../ui/OfflineBanner'
+import UpdateBanner from '../ui/UpdateBanner'
 import { useAppStore } from '../../store'
 import { useGPS } from '../../hooks/useGPS'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
@@ -23,6 +24,7 @@ export default function Layout({ children, title, showBack, topBarRight }: Layou
 
   return (
     <div className="flex flex-col h-dvh bg-stone-50">
+      <UpdateBanner />
       <OfflineBanner isOnline={isOnline} />
       <TopBar title={title} showBack={showBack} right={topBarRight} />
       <main className="flex-1 overflow-y-auto pt-15 pb-20">

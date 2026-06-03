@@ -42,6 +42,7 @@ export default function RegisterFaceButton({ onDone }: Props) {
         isOpen={open}
         onClose={handleClose}
         title="Reconocimiento facial"
+        centered
         footer={
           state === 'idle' ? (
             <Button fullWidth onClick={handleStart}>

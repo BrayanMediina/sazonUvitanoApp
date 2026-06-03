@@ -8,9 +8,11 @@ interface ModalProps {
   children: ReactNode
   footer?: ReactNode
   size?: 'sm' | 'md' | 'lg'
+  /** Fuerza centrado vertical en móvil (vs bottom-sheet por defecto) */
+  centered?: boolean
 }
 
-export default function Modal({ isOpen, onClose, title, children, footer, size = 'md' }: ModalProps) {
+export default function Modal({ isOpen, onClose, title, children, footer, size = 'md', centered = false }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return
     const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -24,7 +26,10 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className={cn(
+        'fixed inset-0 z-50 flex justify-center p-4',
+        centered ? 'items-center' : 'items-end sm:items-center',
+      )}
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -33,12 +38,13 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-soft overflow-hidden',
+          'relative w-full bg-white rounded-2xl shadow-soft flex flex-col',
+          'max-h-[90dvh]',   // nunca superar el 90 % de la pantalla
           maxW[size],
         )}
       >
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100 shrink-0">
             <h2 className="text-base font-bold text-stone-900 font-heading">{title}</h2>
             <button
               onClick={onClose}
@@ -51,9 +57,10 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
             </button>
           </div>
         )}
-        <div className="px-5 py-4">{children}</div>
+        {/* Área de contenido con scroll si desborda */}
+        <div className="px-5 py-4 overflow-y-auto flex-1">{children}</div>
         {footer && (
-          <div className="px-5 py-4 border-t border-stone-100 flex gap-2 justify-end">
+          <div className="px-5 py-4 border-t border-stone-100 flex gap-2 justify-end shrink-0">
             {footer}
           </div>
         )}

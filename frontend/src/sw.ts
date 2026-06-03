@@ -3,8 +3,22 @@ import { precacheAndRoute, cleanupOutdatedCaches, createHandlerBoundToURL } from
 import { registerRoute, NavigationRoute } from 'workbox-routing'
 import { StaleWhileRevalidate, NetworkFirst, CacheFirst } from 'workbox-strategies'
 import { ExpirationPlugin } from 'workbox-expiration'
+import { clientsClaim } from 'workbox-core'
 
 declare const self: ServiceWorkerGlobalScope
+
+// ─── AUTO-UPDATE ─────────────────────────────────────────────
+// Con injectManifest + registerType:'autoUpdate', vite-plugin-pwa envía
+// el mensaje SKIP_WAITING. Hay que responderlo Y llamar skipWaiting
+// directamente para que el nuevo SW tome control inmediatamente.
+self.skipWaiting()
+clientsClaim()
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
+})
 
 // ─── PRECACHE ────────────────────────────────────────────────
 // VitePWA inyecta el manifiesto de precaché aquí en build time
@@ -47,7 +61,6 @@ self.addEventListener('push', (event) => {
   try { data = event.data?.json() ?? {} } catch { /* vacío */ }
 
   const title   = data.title ?? 'El Sazón Uvitano'
-  // vibrate es válido en el API pero no está en los tipos DOM de TS
   const options = {
     body:    data.body  ?? '',
     icon:    data.icon  ?? '/icons/icon-192.svg',
