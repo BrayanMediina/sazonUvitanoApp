@@ -118,33 +118,44 @@ export function useFaceCamera() {
     return detection?.descriptor ?? null
   }, [])
 
-  // ── Registrar rostro (llamar tras login con contraseña) ─────
+  // ── Registrar rostro — mismo loop continuo que loginWithFace ─
   const enrollFace = useCallback(async (): Promise<boolean> => {
     const ok = await openCamera()
     if (!ok) return false
 
-    // 2 segundos para que el usuario se ubique frente a la cámara
-    await new Promise((r) => setTimeout(r, 2000))
-    setState('processing')
+    return new Promise<boolean>((resolve) => {
+      let attempts = 0
+      const MAX_ATTEMPTS = 20 // 10 segundos a 500 ms
 
-    const descriptor = await captureDescriptor()
-    stopCamera()
+      timerRef.current = setInterval(async () => {
+        const descriptor = await captureDescriptor()
 
-    if (!descriptor) {
-      setState('error')
-      setError('No se detectó ningún rostro. Asegúrate de estar frente a la cámara con buena iluminación.')
-      return false
-    }
+        if (descriptor) {
+          clearInterval(timerRef.current!); timerRef.current = null
+          setState('face_detected')
+          await new Promise((r) => setTimeout(r, 400))
+          setState('processing')
 
-    try {
-      await authService.face.enroll(Array.from(descriptor))
-      setState('success')
-      return true
-    } catch (e: unknown) {
-      setState('error')
-      setError(e instanceof Error ? e.message : 'Error al guardar el reconocimiento facial')
-      return false
-    }
+          try {
+            await authService.face.enroll(Array.from(descriptor))
+            stopCamera()
+            setState('success')
+            resolve(true)
+          } catch (e: unknown) {
+            stopCamera()
+            setState('error')
+            setError(e instanceof Error ? e.message : 'Error al guardar el reconocimiento facial')
+            resolve(false)
+          }
+        } else if (++attempts >= MAX_ATTEMPTS) {
+          clearInterval(timerRef.current!); timerRef.current = null
+          stopCamera()
+          setState('error')
+          setError('No se detectó ningún rostro en 10 segundos. Asegúrate de estar bien iluminado y frente a la cámara.')
+          resolve(false)
+        }
+      }, 500)
+    })
   }, [openCamera, stopCamera, captureDescriptor])
 
   // ── Login con rostro ────────────────────────────────────────
