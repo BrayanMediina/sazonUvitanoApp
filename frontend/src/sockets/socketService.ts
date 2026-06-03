@@ -122,8 +122,8 @@ export function emitLocation(lat: number, lng: number) {
   socket?.emit('driver:location', { lat, lng, timestamp: Date.now() })
 }
 
-export function emitChatMessage(content: string) {
-  socket?.emit('chat:send', { content })
+export function emitChatMessage(content: string, clientId?: string) {
+  socket?.emit('chat:send', { content, clientId })
 }
 
 // ─── DESCONECTAR ──────────────────────────────────────────────

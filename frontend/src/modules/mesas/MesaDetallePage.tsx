@@ -1,10 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import Layout from '../../components/layout/Layout'
 import Spinner from '../../components/ui/Spinner'
 import Button from '../../components/ui/Button'
 import MesaStatusBadge from './components/MesaStatusBadge'
+import EditarPedidoSheet from '../pedidos/components/EditarPedidoSheet'
 import { ORDER_STATUS_CONFIG } from '../../constants/orderStatus'
 import { tablesService, ordersService } from '../../services/api'
 import { useAppStore, type AppStore } from '../../store'
@@ -18,6 +19,7 @@ export default function MesaDetallePage() {
   const { id }   = useParams<{ id: string }>()
   const navigate = useNavigate()
   const user     = useAppStore((s) => s.user)
+  const [editOpen, setEditOpen] = useState(false)
 
   // ── Mesa ─────────────────────────────────────────────────────
   // Zustand (actualizado en tiempo real por socket TABLE_UPDATED)
@@ -77,7 +79,7 @@ export default function MesaDetallePage() {
 
   // ── Permisos ──────────────────────────────────────────────────
   const canNewOrder  = ['mesero', 'administrador'].includes(user?.role ?? '')
-  const canEditOrder = ['mesero', 'administrador'].includes(user?.role ?? '')
+  const canEditOrder = ['mesero', 'administrador', 'cajero'].includes(user?.role ?? '')
   const canPayOrder  = ['cajero', 'administrador'].includes(user?.role ?? '')
   const statusCfg    = pedido ? ORDER_STATUS_CONFIG[pedido.status] : null
 
@@ -144,16 +146,28 @@ export default function MesaDetallePage() {
             </div>
 
             {/* Acciones */}
-            <div className={`grid gap-2 ${canEditOrder && pedido.status === 'tomado' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/pedidos/${pedido.id}`)}>
-                Ver detalle
-              </Button>
-              {canEditOrder && pedido.status === 'tomado' && (
-                <Button size="sm" onClick={() => navigate(`/pedidos/${pedido.id}?editar=1`)}>
-                  ✏️ Editar pedido
-                </Button>
-              )}
-            </div>
+            {(() => {
+              const showEdit = canEditOrder && (user?.role === 'cajero' || pedido.status === 'tomado')
+              return (
+                <div className={`grid gap-2 ${showEdit ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/pedidos/${pedido.id}`)}>
+                    Ver detalle
+                  </Button>
+                  {showEdit && (
+                    user?.role === 'cajero'
+                      ? (
+                        <Button size="sm" onClick={() => setEditOpen(true)}>
+                          ✏️ Editar
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => navigate(`/pedidos/${pedido.id}?editar=1`)}>
+                          ✏️ Editar pedido
+                        </Button>
+                      )
+                  )}
+                </div>
+              )
+            })()}
 
             {canPayOrder && pedido.status === 'entregado' && (
               <Button fullWidth size="md" onClick={() => navigate('/caja')}>
@@ -177,6 +191,14 @@ export default function MesaDetallePage() {
           </Button>
         )}
       </div>
+
+      {pedido && canEditOrder && (
+        <EditarPedidoSheet
+          isOpen={editOpen}
+          onClose={() => setEditOpen(false)}
+          pedido={pedido}
+        />
+      )}
     </Layout>
   )
 }

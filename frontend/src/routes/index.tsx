@@ -35,7 +35,7 @@ const ReportesPage       = lazy(() => import('../modules/reportes/ReportesPage')
 // ─── PERMISOS POR ROL ─────────────────────────────────────────
 export const ROLE_ROUTES: Record<Role, string[]> = {
   mesero: ['/dashboard', '/mesas', '/mesas/:id', '/pedidos/nuevo', '/pedidos/:id', '/chat'],
-  cajero: ['/dashboard', '/mesas', '/mesas/:id', '/caja', '/domicilios', '/domicilios/nuevo', '/mapa', '/chat'],
+  cajero: ['/dashboard', '/mesas', '/mesas/:id', '/caja', '/domicilios', '/domicilios/nuevo', '/mapa', '/chat', '/reportes'],
   domiciliario: ['/dashboard', '/mis-entregas', '/mapa', '/chat'],
   administrador: [
     '/dashboard', '/mesas', '/mesas/:id', '/pedidos/nuevo', '/pedidos/:id',
@@ -111,8 +111,8 @@ export default function AppRouter() {
               <Route path="/mis-entregas" element={<MisEntregasPage />} />
             </Route>
 
-            {/* Admin only */}
-            <Route element={<RequireRole roles={['administrador']} />}>
+            {/* Admin + Cajero */}
+            <Route element={<RequireRole roles={['administrador','cajero']} />}>
               <Route path="/reportes" element={<ReportesPage />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/admin/usuarios" element={<AdminUsuariosPage />} />

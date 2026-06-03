@@ -1,21 +1,39 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import Layout from '../../components/layout/Layout'
 import MessageBubble from './components/MessageBubble'
 import ChatInput from './components/ChatInput'
 import Spinner from '../../components/ui/Spinner'
-import { useAppStore } from '../../store'
+import { useAppStore, type AppStore } from '../../store'
 import { emitChatMessage } from '../../sockets/socketService'
 import { chatService } from '../../services/api'
 import { formatDate } from '../../utils/formatDate'
 import type { ChatMessage } from '../../types'
 
 export default function ChatPage() {
-  const user         = useAppStore((s) => s.user)
-  const messages     = useAppStore((s) => s.messages)
-  const markAllRead  = useAppStore((s) => s.markAllRead)
-  const initMessages = useAppStore((s) => s.initMessages)
+  const user         = useAppStore((s) => (s as AppStore).user)
+  const messages     = useAppStore((s) => (s as AppStore).messages)
+  const addMessage   = useAppStore((s) => (s as AppStore).addMessage)
+  const markAllRead  = useAppStore((s) => (s as AppStore).markAllRead)
+  const initMessages = useAppStore((s) => (s as AppStore).initMessages)
   const bottomRef    = useRef<HTMLDivElement>(null)
+
+  const handleSend = useCallback((content: string) => {
+    if (!user) return
+    const clientId = crypto.randomUUID()
+    // Add optimistically so the message appears immediately
+    addMessage({
+      id:         clientId,
+      senderId:   user.id,
+      senderName: user.name,
+      senderRole: user.role,
+      content,
+      timestamp:  new Date().toISOString(),
+      read:       true,
+    })
+    // Server will use the same clientId → dedup prevents duplicate on echo
+    emitChatMessage(content, clientId)
+  }, [user, addMessage])
 
   // Cargar historial (solo una vez por sesión)
   const { data: history = [], isLoading } = useQuery({
@@ -108,7 +126,7 @@ export default function ChatPage() {
 
       {/* Input fijo encima del BottomNav (bottom-16 = 64 px = altura del BottomNav) */}
       <div className="fixed bottom-16 left-0 right-0 z-30 bg-white border-t border-stone-100 shadow-[0_-1px_8px_rgba(0,0,0,.06)]">
-        <ChatInput onSend={emitChatMessage} />
+        <ChatInput onSend={handleSend} />
       </div>
     </Layout>
   )

@@ -12,6 +12,12 @@ export async function getDaily(date?: string) {
   return buildSummary(start, end)
 }
 
+export async function closeDia(date?: string) {
+  const { start, end } = dayRange(date)
+  const summary = await buildSummary(start, end)
+  return { ...summary, closedAt: new Date().toISOString() }
+}
+
 export async function getRange(from: string, to: string) {
   const start = new Date(from)
   const end   = new Date(to)

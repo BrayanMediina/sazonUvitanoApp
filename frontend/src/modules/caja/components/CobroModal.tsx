@@ -13,9 +13,10 @@ const METHODS = Object.keys(PAYMENT_METHOD_CONFIG) as PaymentMethod[]
 interface CobroModalProps {
   order: Order | null
   onClose: () => void
+  onEdit?: () => void
 }
 
-export default function CobroModal({ order, onClose }: CobroModalProps) {
+export default function CobroModal({ order, onClose, onEdit }: CobroModalProps) {
   const [method, setMethod] = useState<PaymentMethod>('efectivo')
   const [received, setReceived] = useState('')
   const qc = useQueryClient()
@@ -43,15 +44,28 @@ export default function CobroModal({ order, onClose }: CobroModalProps) {
       onClose={onClose}
       title="Procesar pago"
       footer={
-        <Button
-          fullWidth
-          size="lg"
-          isLoading={isPending}
-          disabled={method === 'efectivo' && receivedNum < order.total}
-          onClick={() => pay()}
-        >
-          Confirmar pago
-        </Button>
+        <div className="space-y-2">
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-stone-200 text-sm font-semibold text-stone-700 active:bg-stone-50 transition-colors"
+            >
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Corregir pedido
+            </button>
+          )}
+          <Button
+            fullWidth
+            size="lg"
+            isLoading={isPending}
+            disabled={method === 'efectivo' && receivedNum < order.total}
+            onClick={() => pay()}
+          >
+            Confirmar pago
+          </Button>
+        </div>
       }
     >
       <div className="space-y-4">

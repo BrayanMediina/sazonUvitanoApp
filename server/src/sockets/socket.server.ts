@@ -60,16 +60,18 @@ export function createSocketServer(server: HttpServer) {
     })
 
     // Chat
-    socket.on('chat:send', async (data: { content: string }) => {
+    socket.on('chat:send', async (data: { content: string; clientId?: string }) => {
       if (!data.content?.trim()) return
-      const message = await prisma.chatMessage.create({
-        data: {
-          senderId:   user.sub,
-          senderName: user.name,
-          senderRole: user.role as any,
-          content:    data.content.trim(),
-        },
-      })
+      const createData: Record<string, unknown> = {
+        senderId:   user.sub,
+        senderName: user.name,
+        senderRole: user.role as any,
+        content:    data.content.trim(),
+      }
+      // Use client-provided UUID so the sender can dedup optimistic messages
+      const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      if (data.clientId && uuidRe.test(data.clientId)) createData.id = data.clientId
+      const message = await prisma.chatMessage.create({ data: createData as any })
       io?.emit('chat:message', {
         message: {
           id:         message.id,

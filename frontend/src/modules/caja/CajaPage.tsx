@@ -8,6 +8,7 @@ import EmptyState from '../../components/ui/EmptyState'
 import PedidoCobroCard from './components/PedidoCobroCard'
 import CobroModal from './components/CobroModal'
 import CierreCajaModal from './components/CierreCajaModal'
+import EditarPedidoSheet from '../pedidos/components/EditarPedidoSheet'
 import { ordersService, paymentsService } from '../../services/api'
 import { formatCurrency } from '../../utils/formatCurrency'
 import { todayStr } from '../../utils/formatDate'
@@ -22,9 +23,10 @@ const STATUS_FILTERS: { label: string; value: OrderStatus | 'all' }[] = [
 ]
 
 export default function CajaPage() {
-  const [filter, setFilter]         = useState<OrderStatus | 'all'>('all')
-  const [selectedOrder, setSelected] = useState<Order | null>(null)
-  const [showCierre, setShowCierre]  = useState(false)
+  const [filter, setFilter]          = useState<OrderStatus | 'all'>('all')
+  const [selectedOrder, setSelected]  = useState<Order | null>(null)
+  const [editingOrder, setEditing]    = useState<Order | null>(null)
+  const [showCierre, setShowCierre]   = useState(false)
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['orders', 'caja'],
@@ -40,6 +42,11 @@ export default function CajaPage() {
 
   const ingresos = summary?.totalRevenue ?? 0
   const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter)
+
+  // Always use the freshest order data from the query for the cobro modal
+  const liveSelected = selectedOrder
+    ? (orders.find((o) => o.id === selectedOrder.id) ?? selectedOrder)
+    : null
 
   return (
     <Layout title="Caja">
@@ -95,7 +102,25 @@ export default function CajaPage() {
         ))}
       </div>
 
-      <CobroModal order={selectedOrder} onClose={() => setSelected(null)} />
+      <CobroModal
+        order={liveSelected}
+        onClose={() => setSelected(null)}
+        onEdit={() => {
+          setEditing(liveSelected)
+          setSelected(null)
+        }}
+      />
+      {editingOrder && (
+        <EditarPedidoSheet
+          isOpen={!!editingOrder}
+          onClose={() => {
+            setEditing(null)
+            // Re-open cobro modal with same order after edit
+            setSelected(editingOrder)
+          }}
+          pedido={editingOrder}
+        />
+      )}
       <CierreCajaModal isOpen={showCierre} onClose={() => setShowCierre(false)} summary={summary} />
     </Layout>
   )

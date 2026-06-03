@@ -67,20 +67,23 @@ router.patch('/:id/status', requireAuth, requireRole('administrador','cajero'), 
   } catch (e) { next(e) }
 })
 
-router.post('/:id/items', requireAuth, requireRole('administrador','mesero'), validate(z.object({
+router.post('/:id/items', requireAuth, requireRole('administrador','cajero','mesero'), validate(z.object({
   productId: z.string(),
   quantity:  z.number().int().positive(),
   notes:     z.string().optional(),
 })), async (req, res, next) => {
   try {
     const item = await svc.addItem(req.params['id'] as string, req.body)
+    const order = await svc.getById(req.params['id'] as string)
+    emitToAll('order:updated', { order })
     res.status(201).json({ success: true, data: item })
   } catch (e) { next(e) }
 })
 
-router.delete('/:id/items/:itemId', requireAuth, requireRole('administrador','mesero'), async (req, res, next) => {
+router.delete('/:id/items/:itemId', requireAuth, requireRole('administrador','cajero','mesero'), async (req, res, next) => {
   try {
     const order = await svc.removeItem(req.params['id'] as string, req.params['itemId'] as string)
+    emitToAll('order:updated', { order })
     res.json({ success: true, data: order })
   } catch (e) { next(e) }
 })

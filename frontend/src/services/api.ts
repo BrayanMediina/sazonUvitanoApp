@@ -279,4 +279,9 @@ export const reportsService = {
 
   getRange: (from: string, to: string) =>
     http<DailySummary[]>(`/api/reports/range?from=${from}&to=${to}`),
+
+  closeDia: (date?: string) =>
+    http<DailySummary & { closedAt: string }>(`/api/reports/cierre${date ? `?date=${date}` : ''}`, {
+      method: 'POST',
+    }),
 }
