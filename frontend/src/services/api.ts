@@ -7,6 +7,10 @@ import type {
   Product, Payment, Delivery, DailySummary,
   PaginatedResponse, PaymentMethod, Role, ChatMessage
 } from '../types'
+import type {
+  PublicKeyCredentialCreationOptionsJSON,
+  PublicKeyCredentialRequestOptionsJSON,
+} from '@simplewebauthn/browser'
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
@@ -83,7 +87,7 @@ export const authService = {
 
   webauthn: {
     registrationOptions: () =>
-      http<Record<string, unknown>>('/api/auth/webauthn/register-options', { method: 'POST' }),
+      http<PublicKeyCredentialCreationOptionsJSON>('/api/auth/webauthn/register-options', { method: 'POST' }),
 
     registrationVerify: (body: unknown) =>
       http<{ verified: boolean }>('/api/auth/webauthn/register-verify', {
@@ -91,7 +95,7 @@ export const authService = {
       }),
 
     loginOptions: (document: string) =>
-      http<{ options: Record<string, unknown>; userId: string }>('/api/auth/webauthn/login-options', {
+      http<{ options: PublicKeyCredentialRequestOptionsJSON; userId: string }>('/api/auth/webauthn/login-options', {
         method: 'POST', body: JSON.stringify({ document }),
       }),
 
