@@ -2,22 +2,15 @@ import type { Server as HttpServer } from 'node:http'
 import { Server, type Socket }       from 'socket.io'
 import { verifyAccessToken }         from '../utils/jwt.js'
 import { prisma }                    from '../config/database.js'
-import { env }                       from '../config/env.js'
 
 let io: Server | undefined
 
 export function createSocketServer(server: HttpServer) {
-  // CORS: auth por Bearer token (no cookies), podemos abrir a cualquier origen.
-  // env.CORS_ORIGIN puede ser un string con comas o '*' — normalizamos a array.
-  const corsOrigin: string | string[] =
-    env.CORS_ORIGIN === '*'
-      ? '*'
-      : env.CORS_ORIGIN.includes(',')
-        ? env.CORS_ORIGIN.split(',').map((s) => s.trim())
-        : env.CORS_ORIGIN
-
+  // CORS: auth es 100% por Bearer token (sin cookies), igual que Express.
+  // Aceptar cualquier origen para que Vercel/Netlify/localhost funcionen sin
+  // tener que tocar la var de entorno en Render cada vez que cambia el dominio.
   io = new Server(server, {
-    cors: { origin: corsOrigin, methods: ['GET', 'POST'] },
+    cors: { origin: '*', methods: ['GET', 'POST'] },
     // polling primero: más compatible con proxies/firewalls; luego upgrade a WS
     transports: ['polling', 'websocket'],
     // Render free puede tardar en despertar — ser paciente con pings
