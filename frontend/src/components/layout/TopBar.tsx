@@ -15,8 +15,7 @@ interface TopBarProps {
 export default function TopBar({ title, showBack, right }: TopBarProps) {
   const navigate = useNavigate()
   const { logout } = useAuth()
-  const user   = useAppStore((s) => (s as AppStore).user)
-  const unread = useAppStore((s) => (s as AppStore).unreadNotifications)
+  const user = useAppStore((s) => (s as AppStore).user)
 
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -72,7 +71,7 @@ export default function TopBar({ title, showBack, right }: TopBarProps) {
 
       <div className="flex items-center gap-1">
         {right}
-        <NotificationBell count={unread} />
+        <NotificationBell />
 
         {/* Botón de usuario con menú desplegable */}
         <div className="relative" ref={menuRef}>

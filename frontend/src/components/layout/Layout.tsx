@@ -5,6 +5,7 @@ import OfflineBanner from '../ui/OfflineBanner'
 import { useAppStore } from '../../store'
 import { useGPS } from '../../hooks/useGPS'
 import { usePushNotifications } from '../../hooks/usePushNotifications'
+import { useSocketInit } from '../../hooks/useSocket'
 import InstallBanner from '../ui/InstallBanner'
 
 interface LayoutProps {
@@ -16,6 +17,7 @@ interface LayoutProps {
 
 export default function Layout({ children, title, showBack, topBarRight }: LayoutProps) {
   const isOnline = useAppStore((s) => s.isOnline)
+  useSocketInit()          // Inicializa socket en CUALQUIER página — crítico tras refresh
   useGPS()                 // Solo activo para domiciliario
   usePushNotifications()   // Solicita permiso y suscribe al canal VAPID
 

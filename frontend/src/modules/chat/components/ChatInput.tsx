@@ -41,11 +41,12 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       <button
         onClick={handleSend}
         disabled={!value.trim() || disabled}
-        className="h-10 w-10 flex items-center justify-center bg-brand-900 text-white rounded-2xl disabled:opacity-40 active:scale-90 transition-all"
+        className="h-10 w-10 flex items-center justify-center bg-brand-900 text-white rounded-2xl disabled:opacity-40 active:scale-90 transition-all shrink-0"
         aria-label="Enviar"
       >
-        <svg className="h-4 w-4 rotate-45" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+        {/* Avión de papel apuntando arriba-derecha */}
+        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.52 60.52 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
         </svg>
       </button>
     </div>
