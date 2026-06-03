@@ -72,10 +72,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ordersCreated     Order[]            @relation("creator")
-  deliveries        Delivery[]         @relation("driver")
-  payments          Payment[]          @relation("cashier")
-  pushSubscriptions PushSubscription[]
+  ordersCreated       Order[]              @relation("creator")
+  deliveries          Delivery[]           @relation("driver")
+  payments            Payment[]            @relation("cashier")
+  pushSubscriptions   PushSubscription[]
+  webAuthnCredentials WebAuthnCredential[]
 
   @@index([role])
   @@index([document])
@@ -207,4 +208,18 @@ model ChatMessage {
   createdAt  DateTime @default(now())
 
   @@index([createdAt])
+}
+
+model WebAuthnCredential {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credentialId String   @unique
+  publicKey    String
+  counter      BigInt   @default(0)
+  deviceType   String?
+  transports   String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
 }

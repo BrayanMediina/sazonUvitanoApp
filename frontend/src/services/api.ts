@@ -70,7 +70,7 @@ export const authService = {
     name: string; document: string; email?: string;
     phone?: string; password: string; role: Role
   }) =>
-    http<AuthResponse>('/api/auth/register', {
+    http<{ user: User; pendingActivation: boolean }>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(body),
     }),
@@ -80,6 +80,29 @@ export const authService = {
 
   me: () =>
     http<User>('/api/auth/me'),
+
+  webauthn: {
+    registrationOptions: () =>
+      http<Record<string, unknown>>('/api/auth/webauthn/register-options', { method: 'POST' }),
+
+    registrationVerify: (body: unknown) =>
+      http<{ verified: boolean }>('/api/auth/webauthn/register-verify', {
+        method: 'POST', body: JSON.stringify(body),
+      }),
+
+    loginOptions: (document: string) =>
+      http<{ options: Record<string, unknown>; userId: string }>('/api/auth/webauthn/login-options', {
+        method: 'POST', body: JSON.stringify({ document }),
+      }),
+
+    loginVerify: (userId: string, response: unknown) =>
+      http<AuthResponse>('/api/auth/webauthn/login-verify', {
+        method: 'POST', body: JSON.stringify({ userId, response }),
+      }),
+
+    hasCredential: () =>
+      http<{ hasCredential: boolean }>('/api/auth/webauthn/has-credential'),
+  },
 }
 
 async function refreshToken(): Promise<boolean> {

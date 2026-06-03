@@ -4,6 +4,7 @@ import { useAppStore, type AppStore } from '../../store'
 import { useAuth } from '../../hooks/useAuth'
 import Avatar from '../ui/Avatar'
 import NotificationBell from '../ui/NotificationBell'
+import RegisterFaceButton from '../../modules/auth/RegisterFaceButton'
 import { ROLE_CONFIG } from '../../constants/orderStatus'
 
 interface TopBarProps {
@@ -94,6 +95,11 @@ export default function TopBar({ title, showBack, right }: TopBarProps) {
                   </span>
                 )}
               </div>
+
+              {/* Registrar reconocimiento facial */}
+              <RegisterFaceButton onDone={() => setMenuOpen(false)} />
+
+              <div className="border-t border-stone-100" />
 
               {/* Acción cerrar sesión */}
               <button

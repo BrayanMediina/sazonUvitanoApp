@@ -10,6 +10,7 @@ const envSchema = z.object({
   JWT_EXPIRES_IN:     z.string().default('15m'),
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   CORS_ORIGIN:        z.string().default('http://localhost:5173,http://localhost:8080,*.vercel.app'),
+  FRONTEND_URL:       z.string().default('http://localhost:5173'),
   RATE_LIMIT_WINDOW_MS:         z.coerce.number().default(60_000),    // ventana: 1 min
   RATE_LIMIT_MAX_REQUESTS:     z.coerce.number().default(300),       // 300 req/min API general
   RATE_LIMIT_AUTH_MAX:         z.coerce.number().default(20),        // 20 intentos/min en /auth

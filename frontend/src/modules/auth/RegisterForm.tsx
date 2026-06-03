@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useAuth } from '../../hooks/useAuth'
 import { authService } from '../../services/api'
 import Button from '../../components/ui/Button'
 import Input from '../../components/ui/Input'
@@ -15,16 +14,17 @@ const schema = z.object({
   email:    z.string().email('Email inválido').optional().or(z.literal('')),
   phone:    z.string().optional().or(z.literal('')),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role:     z.enum(['mesero', 'cajero', 'domiciliario', 'administrador'] as const),
+  role:     z.enum(['mesero', 'cajero', 'domiciliario'] as const),
 })
 
 type FormData = z.infer<typeof schema>
 
-const ROLES: Role[] = ['mesero', 'cajero', 'domiciliario', 'administrador']
+// El rol administrador solo se crea desde el panel de admin
+const ROLES: Role[] = ['mesero', 'cajero', 'domiciliario']
 
 export default function RegisterForm() {
-  const { login } = useAuth()
-  const [error, setError] = useState<string | null>(null)
+  const [error,   setError]   = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -41,10 +41,30 @@ export default function RegisterForm() {
         email: data.email || undefined,
         phone: data.phone || undefined,
       })
-      await login({ document: data.document, password: data.password })
+      setSuccess(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Error al registrarse')
     }
+  }
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center text-center gap-4 py-8">
+        <span className="text-5xl">🎉</span>
+        <div>
+          <p className="text-base font-bold text-stone-900">¡Cuenta creada exitosamente!</p>
+          <p className="text-sm text-stone-500 mt-2 leading-relaxed">
+            Tu cuenta está <span className="font-semibold text-amber-600">pendiente de activación</span>.
+            Un administrador debe habilitarla para que puedas ingresar.
+          </p>
+        </div>
+        <div className="w-full bg-amber-50 border border-amber-200 rounded-2xl p-4">
+          <p className="text-xs text-amber-800 font-medium">
+            📋 Comunícate con el administrador del restaurante para que active tu cuenta.
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -57,22 +77,22 @@ export default function RegisterForm() {
 
       <div>
         <p className="text-sm font-medium text-stone-700 mb-2">Rol</p>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {ROLES.map((role) => {
             const cfg = ROLE_CONFIG[role]
             return (
               <button
                 key={role}
                 type="button"
-                onClick={() => setValue('role', role, { shouldValidate: true })}
-                className={`flex items-center gap-2 p-3 rounded-xl border-2 text-left transition-all active:scale-95 ${
+                onClick={() => setValue('role', role as FormData['role'], { shouldValidate: true })}
+                className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all active:scale-95 ${
                   selectedRole === role
                     ? 'border-brand-900 bg-brand-50'
                     : 'border-stone-200 bg-white'
                 }`}
               >
-                <span className="text-lg">{cfg.icon}</span>
-                <span className={`text-xs font-semibold ${selectedRole === role ? 'text-brand-900' : 'text-stone-500'}`}>
+                <span className="text-xl">{cfg.icon}</span>
+                <span className={`text-[10px] font-semibold text-center leading-tight ${selectedRole === role ? 'text-brand-900' : 'text-stone-500'}`}>
                   {cfg.label}
                 </span>
               </button>
@@ -80,6 +100,12 @@ export default function RegisterForm() {
           })}
         </div>
         {errors.role && <p className="text-xs text-red-500 mt-1.5">{errors.role.message}</p>}
+      </div>
+
+      <div className="bg-stone-50 border border-stone-200 rounded-xl px-3 py-2.5">
+        <p className="text-xs text-stone-500 leading-relaxed">
+          ℹ️ Tu cuenta quedará <strong>pendiente de activación</strong> hasta que un administrador la apruebe.
+        </p>
       </div>
 
       {error && (

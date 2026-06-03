@@ -66,15 +66,39 @@ export default function UsuariosPage() {
         </div>
       </div>
 
+      {/* Pendientes de activación */}
+      {!isLoading && (() => {
+        const pendientes = users.filter((u) => !u.isActive)
+        if (!pendientes.length) return null
+        return (
+          <div className="mx-5 mb-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-start gap-3">
+            <span className="text-xl shrink-0 mt-0.5">⏳</span>
+            <div>
+              <p className="text-sm font-semibold text-amber-900">
+                {pendientes.length} cuenta{pendientes.length > 1 ? 's' : ''} pendiente{pendientes.length > 1 ? 's' : ''} de activación
+              </p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Actívalas para que puedan ingresar al sistema.
+              </p>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Lista */}
       <div className="px-5 space-y-2 pb-6">
         {isLoading && <div className="flex justify-center py-8"><Spinner /></div>}
         {!isLoading && filtered.length === 0 && (
           <EmptyState icon="👥" title="Sin usuarios" description="No se encontraron usuarios" />
         )}
-        {!isLoading && filtered.map((user) => (
-          <UsuarioRow key={user.id} user={user} />
-        ))}
+        {/* Pendientes primero */}
+        {!isLoading && filtered
+          .slice()
+          .sort((a, b) => Number(a.isActive) - Number(b.isActive))
+          .map((user) => (
+            <UsuarioRow key={user.id} user={user} />
+          ))
+        }
       </div>
 
       <UsuarioFormModal isOpen={showModal} onClose={() => setShowModal(false)} />
