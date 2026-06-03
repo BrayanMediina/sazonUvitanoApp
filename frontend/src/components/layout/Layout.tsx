@@ -20,7 +20,7 @@ export default function Layout({ children, title, showBack, topBarRight }: Layou
   usePushNotifications()   // Solicita permiso y suscribe al canal VAPID
 
   return (
-    <div className="flex flex-col min-h-dvh bg-stone-50">
+    <div className="flex flex-col h-dvh bg-stone-50">
       <OfflineBanner isOnline={isOnline} />
       <TopBar title={title} showBack={showBack} right={topBarRight} />
       <main className="flex-1 overflow-y-auto pt-15 pb-20">
