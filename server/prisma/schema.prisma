@@ -68,9 +68,10 @@ model User {
   phone     String?
   password  String
   role      Role
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  isActive       Boolean  @default(true)
+  faceDescriptor String?  // JSON array[128] — descriptor facial para autenticación por cámara
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   ordersCreated       Order[]              @relation("creator")
   deliveries          Delivery[]           @relation("driver")

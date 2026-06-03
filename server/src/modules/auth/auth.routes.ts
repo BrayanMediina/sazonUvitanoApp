@@ -2,8 +2,9 @@ import { Router } from 'express'
 import { validate }    from '../../middlewares/validate.middleware.js'
 import { requireAuth } from '../../middlewares/auth.middleware.js'
 import { loginSchema, registerSchema, refreshSchema } from './auth.schemas.js'
-import * as svc    from './auth.service.js'
-import * as webauthn from './webauthn.service.js'
+import * as svc      from './auth.service.js'
+import * as webauthn  from './webauthn.service.js'
+import * as faceSvc   from './face.service.js'
 import type { AuthRequest } from '../../middlewares/auth.middleware.js'
 
 const router = Router()
@@ -45,7 +46,35 @@ router.get('/me', requireAuth, async (req: AuthRequest, res, next) => {
   } catch (e) { next(e) }
 })
 
-// ── WebAuthn / Reconocimiento facial ───────────────────────────
+// ── Reconocimiento facial por cámara ──────────────────────────
+
+// Registrar descriptor facial (requiere sesión activa)
+router.post('/face/enroll', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const { descriptor } = req.body as { descriptor: number[] }
+    const result = await faceSvc.enrollFace(req.user!.id, descriptor)
+    res.json({ success: true, data: result })
+  } catch (e) { next(e) }
+})
+
+// Verificar rostro → devuelve JWT (endpoint público)
+router.post('/face/verify', async (req, res, next) => {
+  try {
+    const { document, descriptor } = req.body as { document: string; descriptor: number[] }
+    const { user, tokens } = await faceSvc.verifyFace(document, descriptor)
+    res.json({ success: true, data: { user: safeUser(user as any), ...tokens } })
+  } catch (e) { next(e) }
+})
+
+// Consultar si el usuario logueado tiene cara registrada
+router.get('/face/has-descriptor', requireAuth, async (req: AuthRequest, res, next) => {
+  try {
+    const has = await faceSvc.hasFaceDescriptor(req.user!.id)
+    res.json({ success: true, data: { hasDescriptor: has } })
+  } catch (e) { next(e) }
+})
+
+// ── WebAuthn (biometría del SO — alternativa) ──────────────────
 
 // 1. Obtener opciones para registrar credencial biométrica (requiere sesión activa)
 router.post('/webauthn/register-options', requireAuth, async (req: AuthRequest, res, next) => {

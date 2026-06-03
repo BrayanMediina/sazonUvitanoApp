@@ -85,6 +85,21 @@ export const authService = {
   me: () =>
     http<User>('/api/auth/me'),
 
+  face: {
+    enroll: (descriptor: number[]) =>
+      http<{ enrolled: boolean }>('/api/auth/face/enroll', {
+        method: 'POST', body: JSON.stringify({ descriptor }),
+      }),
+
+    verify: (document: string, descriptor: number[]) =>
+      http<AuthResponse>('/api/auth/face/verify', {
+        method: 'POST', body: JSON.stringify({ document, descriptor }),
+      }),
+
+    hasDescriptor: () =>
+      http<{ hasDescriptor: boolean }>('/api/auth/face/has-descriptor'),
+  },
+
   webauthn: {
     registrationOptions: () =>
       http<PublicKeyCredentialCreationOptionsJSON>('/api/auth/webauthn/register-options', { method: 'POST' }),
