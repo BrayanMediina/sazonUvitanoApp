@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,29 +14,29 @@ const schema = z.object({
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
 })
 type FormData = z.infer<typeof schema>
-
 type Mode = 'password' | 'face'
 
 export default function LoginForm() {
-  const navigate = useNavigate()
+  const navigate  = useNavigate()
   const { login } = useAuth()
   const { videoRef, state, error: faceError, loginWithFace, reset } = useFaceCamera()
 
-  const [mode, setMode]     = useState<Mode>('password')
-  const [error, setError]   = useState<string | null>(null)
-  const [doc, setDoc]       = useState('')
-  const [faceStarted, setFaceStarted] = useState(false)
+  const [mode,        setMode]        = useState<Mode>('password')
+  const [error,       setError]       = useState<string | null>(null)
+  const [doc,         setDoc]         = useState('')
+  const [cameraOpen,  setCameraOpen]  = useState(false)
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
-  const switchMode = (m: Mode) => {
-    reset()
-    setFaceStarted(false)
-    setError(null)
-    setMode(m)
-  }
+  // Bloquear scroll mientras el overlay de cámara está abierto
+  useEffect(() => {
+    document.body.style.overflow = cameraOpen ? 'hidden' : ''
+    return () => { document.body.style.overflow = '' }
+  }, [cameraOpen])
+
+  const switchMode = (m: Mode) => { reset(); setCameraOpen(false); setError(null); setMode(m) }
 
   const onPasswordSubmit = async (data: FormData) => {
     try {
@@ -48,11 +48,13 @@ export default function LoginForm() {
     }
   }
 
-  const startFaceScan = async () => {
-    setFaceStarted(true)
+  const openFaceCamera = async () => {
+    setCameraOpen(true)
     await loginWithFace(doc)
-    // Si fue exitoso, la store se actualizó y RequireAuth redirigirá
+    // Si fue exitoso, la store se actualizó → RequireAuth redirigirá
   }
+
+  const closeFaceCamera = () => { reset(); setCameraOpen(false) }
 
   return (
     <div className="space-y-5">
@@ -77,7 +79,6 @@ export default function LoginForm() {
             mode === 'face' ? 'bg-white text-brand-900 shadow-sm' : 'text-stone-400'
           }`}
         >
-          {/* Ícono de cámara */}
           <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
           </svg>
@@ -112,57 +113,29 @@ export default function LoginForm() {
         </form>
       )}
 
-      {/* ── Modo reconocimiento facial ── */}
+      {/* ── Modo facial: formulario de documento ── */}
       {mode === 'face' && (
         <div className="space-y-4">
-          {/* Documento — siempre visible para saber a quién buscar */}
-          {!faceStarted && (
-            <Input
-              label="Documento de identidad"
-              type="text"
-              placeholder="Número de documento"
-              inputMode="numeric"
-              value={doc}
-              onChange={(e) => setDoc(e.target.value)}
-            />
-          )}
+          <Input
+            label="Documento de identidad"
+            type="text"
+            placeholder="Número de documento"
+            inputMode="numeric"
+            value={doc}
+            onChange={(e) => setDoc(e.target.value)}
+          />
 
-          {/* Cámara */}
-          {faceStarted && (
-            <CameraFaceCapture
-              videoRef={videoRef}
-              state={state}
-              error={faceError}
-              onCancel={() => { reset(); setFaceStarted(false) }}
-            />
-          )}
-
-          {/* Botón activar cámara */}
-          {!faceStarted && (
-            <Button
-              fullWidth
-              size="lg"
-              disabled={!doc.trim()}
-              onClick={startFaceScan}
-            >
-              <svg className="h-5 w-5 mr-2 inline" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
-              </svg>
-              Activar cámara
-            </Button>
-          )}
-
-          {/* Reintentar tras error */}
-          {state === 'error' && (
-            <Button
-              variant="outline"
-              fullWidth
-              size="lg"
-              onClick={() => { reset(); setFaceStarted(false) }}
-            >
-              Intentar de nuevo
-            </Button>
-          )}
+          <Button
+            fullWidth
+            size="lg"
+            disabled={!doc.trim()}
+            onClick={openFaceCamera}
+          >
+            <svg className="h-5 w-5 mr-2 inline" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" />
+            </svg>
+            Activar cámara
+          </Button>
 
           <p className="text-xs text-stone-400 text-center">
             ¿No tienes reconocimiento facial?{' '}
@@ -170,6 +143,50 @@ export default function LoginForm() {
               Ingresa con contraseña
             </button>
           </p>
+        </div>
+      )}
+
+      {/* ── Overlay pantalla completa cuando la cámara está activa ── */}
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black/95">
+          {/* Encabezado */}
+          <div className="flex items-center justify-between px-5 py-4 shrink-0">
+            <h2 className="text-base font-bold text-white">Verificando identidad</h2>
+            {(state === 'error' || state === 'success') && (
+              <button
+                onClick={closeFaceCamera}
+                className="min-w-10 min-h-10 flex items-center justify-center rounded-xl text-white/60 active:text-white active:bg-white/10"
+                aria-label="Cerrar"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          {/* Cámara centrada */}
+          <div className="flex-1 flex flex-col items-center justify-center px-6 gap-4">
+            <CameraFaceCapture
+              videoRef={videoRef}
+              state={state}
+              error={faceError}
+            />
+          </div>
+
+          {/* Pie */}
+          <div className="px-5 pb-8 pt-4 shrink-0">
+            {state === 'error' && (
+              <div className="flex gap-3">
+                <Button variant="outline" fullWidth onClick={() => { reset(); openFaceCamera() }}>
+                  Reintentar
+                </Button>
+                <Button variant="outline" fullWidth onClick={closeFaceCamera}>
+                  Cancelar
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
