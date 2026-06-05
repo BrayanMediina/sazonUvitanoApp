@@ -31,6 +31,7 @@ serviceAccountKey.json
 
 # Instrucciones de deploy (contiene claves VAPID y credenciales)
 DEPLOY.md
+*.claude
 
 # ─── LOGS ────────────────────────────────────────────────────
 logs/
